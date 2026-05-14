@@ -10,17 +10,23 @@ import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.content.res.Resources
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.UserHandle
 import android.provider.Settings
+import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 import androidx.annotation.RequiresApi
+import androidx.core.content.res.ResourcesCompat
 import app.olauncher.BuildConfig
 import app.olauncher.R
 import app.olauncher.data.Constants
+import app.olauncher.data.Prefs
 import java.util.Calendar
 
 fun View.hideKeyboard() {
@@ -178,4 +184,60 @@ fun Long.hasBeenMinutes(minutes: Int): Boolean =
 
 fun Int.dpToPx(): Int {
     return (this * Resources.getSystem().displayMetrics.density).toInt()
+}
+
+fun Context.getAppTypeface(fontId: Int = Prefs(this).appFont): Typeface? {
+    return when (fontId) {
+        Constants.Font.MONO -> Typeface.create("monospace", Typeface.NORMAL)
+        Constants.Font.JETBRAINS -> ResourcesCompat.getFont(this, R.font.jetbrains_mono)
+        Constants.Font.SPACE_MONO -> ResourcesCompat.getFont(this, R.font.space_mono)
+        Constants.Font.ORBITRON -> ResourcesCompat.getFont(this, R.font.orbitron)
+        Constants.Font.VT323 -> ResourcesCompat.getFont(this, R.font.vt323)
+        Constants.Font.PRESS_START -> ResourcesCompat.getFont(this, R.font.press_start_2p)
+        Constants.Font.MAJOR_MONO -> ResourcesCompat.getFont(this, R.font.major_mono)
+        Constants.Font.BUNGEE -> ResourcesCompat.getFont(this, R.font.bungee)
+        Constants.Font.MONOTON -> ResourcesCompat.getFont(this, R.font.monoton)
+        Constants.Font.BEBAS -> ResourcesCompat.getFont(this, R.font.bebas_neue)
+        Constants.Font.PACIFICO -> ResourcesCompat.getFont(this, R.font.pacifico)
+        Constants.Font.MARKER -> ResourcesCompat.getFont(this, R.font.permanent_marker)
+        Constants.Font.PLAYFAIR -> ResourcesCompat.getFont(this, R.font.playfair)
+        Constants.Font.CORMORANT -> ResourcesCompat.getFont(this, R.font.cormorant)
+        Constants.Font.CINZEL -> ResourcesCompat.getFont(this, R.font.cinzel)
+        Constants.Font.TANGERINE -> ResourcesCompat.getFont(this, R.font.tangerine)
+        Constants.Font.LOBSTER -> ResourcesCompat.getFont(this, R.font.lobster)
+        Constants.Font.UNIFRAKTUR -> ResourcesCompat.getFont(this, R.font.unifraktur)
+        else -> Typeface.create("sans-serif-light", Typeface.NORMAL)
+    }
+}
+
+fun View.applyAppFont(typeface: Typeface?) {
+    if (typeface == null) return
+    if (this is TextView) {
+        val style = this.typeface?.style ?: Typeface.NORMAL
+        this.typeface = Typeface.create(typeface, style)
+    }
+    if (this is ViewGroup) {
+        for (i in 0 until childCount) {
+            getChildAt(i).applyAppFont(typeface)
+        }
+    }
+}
+
+fun View.scaleTextSizes(ratio: Float) {
+    if (ratio == 1f) return
+    if (this is TextView) {
+        setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize * ratio)
+    }
+    if (this is ViewGroup) {
+        for (i in 0 until childCount) {
+            getChildAt(i).scaleTextSizes(ratio)
+        }
+    }
+}
+
+fun View.applyAppTextSize(context: Context) {
+    val configScale = context.resources.configuration.fontScale
+    if (configScale <= 0f) return
+    val prefScale = Prefs(context).textSizeScale
+    scaleTextSizes(prefScale / configScale)
 }

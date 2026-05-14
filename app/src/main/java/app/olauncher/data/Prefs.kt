@@ -31,6 +31,7 @@ class Prefs(context: Context) {
     private val HIDDEN_APPS_UPDATED = "HIDDEN_APPS_UPDATED"
     private val SHOW_HINT_COUNTER = "SHOW_HINT_COUNTER"
     private val APP_THEME = "APP_THEME"
+    private val APP_FONT = "APP_FONT"
     private val ABOUT_CLICKED = "ABOUT_CLICKED"
     private val RATE_CLICKED = "RATE_CLICKED"
     private val WALLPAPER_MSG_SHOWN = "WALLPAPER_MSG_SHOWN"
@@ -194,6 +195,38 @@ class Prefs(context: Context) {
     var appTheme: Int
         get() = prefs.getInt(APP_THEME, AppCompatDelegate.MODE_NIGHT_YES)
         set(value) = prefs.edit { putInt(APP_THEME, value).apply() }
+
+    var appFont: Int
+        get() = prefs.getInt(APP_FONT, Constants.Font.LIGHT)
+        set(value) = prefs.edit { putInt(APP_FONT, value).apply() }
+
+    var cgmEnabled: Boolean
+        get() = prefs.getBoolean("CGM_ENABLED", false)
+        set(value) = prefs.edit { putBoolean("CGM_ENABLED", value).apply() }
+
+    var cgmRawText: String
+        get() = prefs.getString("CGM_RAW_TEXT", "").orEmpty()
+        set(value) = prefs.edit { putString("CGM_RAW_TEXT", value).apply() }
+
+    var cgmBgTime: Long
+        get() = prefs.getLong("CGM_BG_TIME", 0L)
+        set(value) = prefs.edit { putLong("CGM_BG_TIME", value).apply() }
+
+    var cgmUnit: String
+        get() = prefs.getString("CGM_UNIT", "mmol/L").orEmpty()
+        set(value) = prefs.edit { putString("CGM_UNIT", value).apply() }
+
+    var cgmPackage: String
+        get() = prefs.getString("CGM_PACKAGE", "").orEmpty()
+        set(value) = prefs.edit { putString("CGM_PACKAGE", value).apply() }
+
+    var cgmHistory: String
+        get() = prefs.getString("CGM_HISTORY", "").orEmpty()
+        set(value) = prefs.edit { putString("CGM_HISTORY", value).apply() }
+
+    var homeTextColor: Int
+        get() = prefs.getInt("HOME_TEXT_COLOR", 0)
+        set(value) = prefs.edit { putInt("HOME_TEXT_COLOR", value).apply() }
 
     var textSizeScale: Float
         get() = prefs.getFloat(TEXT_SIZE_SCALE, 1.0f)

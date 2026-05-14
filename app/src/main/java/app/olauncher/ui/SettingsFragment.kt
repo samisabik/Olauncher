@@ -28,7 +28,11 @@ import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentSettingsBinding
 import app.olauncher.helper.animateAlpha
 import app.olauncher.helper.appUsagePermissionGranted
+import app.olauncher.helper.applyAppFont
+import app.olauncher.helper.applyAppTextSize
+import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.getColorFromAttr
+import app.olauncher.helper.scaleTextSizes
 import app.olauncher.helper.isAccessServiceEnabled
 import app.olauncher.helper.isDarkThemeOn
 import app.olauncher.helper.isEinkDisplay
@@ -51,7 +55,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
-    private val showPentastic = System.currentTimeMillis() % 2 == 0L
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
@@ -73,12 +76,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.homeAppsNum.text = prefs.homeAppsNum.toString()
         populateProMessage()
         populateKeyboardText()
-        populateScreenTimeOnOff()
-        populateLockSettings()
-        populateHomeButtonRecents()
-        populateWallpaperText()
         populateAppThemeText()
         populateTextSize()
+        populateAppFont()
+        populateCgm()
+        populateHomeColor()
         populateAlignment()
         populateStatusBar()
         populateDateTime()
@@ -88,8 +90,9 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         initClickListeners()
         initObservers()
 
-        if (showPentastic)
-            binding.footer.text = getText(R.string.new_app_minimal_todo_lists)
+        view.applyAppFont(requireContext().getAppTypeface())
+        view.applyAppTextSize(requireContext())
+        applyFontPreviewToButtons()
     }
 
     override fun onClick(view: View) {
@@ -97,6 +100,29 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.dateTimeSelectLayout.visibility = View.GONE
         binding.appThemeSelectLayout.visibility = View.GONE
         binding.swipeDownSelectLayout.visibility = View.GONE
+        if (view.id != R.id.homeColorCurrent
+            && view.id != R.id.homeColorDefault && view.id != R.id.homeColorSnow
+            && view.id != R.id.homeColorTeal && view.id != R.id.homeColorBlue
+            && view.id != R.id.homeColorPurple && view.id != R.id.homeColorGreen
+            && view.id != R.id.homeColorYellow && view.id != R.id.homeColorOrange
+            && view.id != R.id.homeColorRed
+        ) {
+            binding.homeColorSelectLayout.visibility = View.GONE
+        }
+        if (view.id != R.id.appFontText
+            && view.id != R.id.fontLight && view.id != R.id.fontMono
+            && view.id != R.id.fontJetbrains && view.id != R.id.fontSpaceMono
+            && view.id != R.id.fontOrbitron && view.id != R.id.fontVt323
+            && view.id != R.id.fontPressStart && view.id != R.id.fontMajorMono
+            && view.id != R.id.fontBungee && view.id != R.id.fontMonoton
+            && view.id != R.id.fontBebas && view.id != R.id.fontPacifico
+            && view.id != R.id.fontMarker && view.id != R.id.fontPlayfair
+            && view.id != R.id.fontCormorant && view.id != R.id.fontCinzel
+            && view.id != R.id.fontTangerine && view.id != R.id.fontLobster
+            && view.id != R.id.fontUnifraktur
+        ) {
+            binding.appFontSelectLayout.visibility = View.GONE
+        }
         if (view.id != R.id.textSizeMinus && view.id != R.id.textSizePlus) {
             if (binding.textSizesLayout.isVisible) {
                 binding.textSizesLayout.visibility = View.GONE
@@ -108,16 +134,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
         when (view.id) {
             R.id.olauncherHiddenApps -> showHiddenApps()
-            R.id.moreFeatures -> viewModel.showDialog.postValue(Constants.Dialog.PRO_MESSAGE)
-            R.id.screenTimeOnOff -> viewModel.showDialog.postValue(Constants.Dialog.DIGITAL_WELLBEING)
             R.id.appInfo -> openAppInfo(requireContext(), Process.myUserHandle(), BuildConfig.APPLICATION_ID)
             R.id.setLauncher -> viewModel.resetLauncherLiveData.call()
-            R.id.toggleLock -> toggleLockMode()
-            R.id.homeButtonRecents -> toggleHomeButtonRecents()
             R.id.autoShowKeyboard -> toggleKeyboardText()
             R.id.homeAppsNum -> binding.appsNumSelectLayout.visibility = View.VISIBLE
-            R.id.dailyWallpaperUrl -> requireContext().openUrl(prefs.dailyWallpaperUrl)
-            R.id.dailyWallpaper -> toggleDailyWallpaperUpdate()
             R.id.alignment -> binding.alignmentSelectLayout.visibility = View.VISIBLE
             R.id.alignmentLeft -> viewModel.updateHomeAlignment(Gravity.START)
             R.id.alignmentCenter -> viewModel.updateHomeAlignment(Gravity.CENTER)
@@ -133,9 +153,38 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.themeDark -> updateTheme(AppCompatDelegate.MODE_NIGHT_YES)
             R.id.themeSystem -> updateTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             R.id.textSizeValue -> binding.textSizesLayout.visibility = View.VISIBLE
-            R.id.actionAccessibility -> openAccessibilityService()
-            R.id.closeAccessibility -> toggleAccessibilityVisibility(false)
-            R.id.notWorking -> requireContext().openUrl(Constants.URL_DOUBLE_TAP)
+            R.id.appFontText -> binding.appFontSelectLayout.visibility = View.VISIBLE
+            R.id.fontLight -> updateAppFont(Constants.Font.LIGHT)
+            R.id.fontMono -> updateAppFont(Constants.Font.MONO)
+            R.id.fontJetbrains -> updateAppFont(Constants.Font.JETBRAINS)
+            R.id.fontSpaceMono -> updateAppFont(Constants.Font.SPACE_MONO)
+            R.id.fontOrbitron -> updateAppFont(Constants.Font.ORBITRON)
+            R.id.fontVt323 -> updateAppFont(Constants.Font.VT323)
+            R.id.fontPressStart -> updateAppFont(Constants.Font.PRESS_START)
+            R.id.fontMajorMono -> updateAppFont(Constants.Font.MAJOR_MONO)
+            R.id.fontBungee -> updateAppFont(Constants.Font.BUNGEE)
+            R.id.fontMonoton -> updateAppFont(Constants.Font.MONOTON)
+            R.id.fontBebas -> updateAppFont(Constants.Font.BEBAS)
+            R.id.fontPacifico -> updateAppFont(Constants.Font.PACIFICO)
+            R.id.fontMarker -> updateAppFont(Constants.Font.MARKER)
+            R.id.fontPlayfair -> updateAppFont(Constants.Font.PLAYFAIR)
+            R.id.fontCormorant -> updateAppFont(Constants.Font.CORMORANT)
+            R.id.fontCinzel -> updateAppFont(Constants.Font.CINZEL)
+            R.id.fontTangerine -> updateAppFont(Constants.Font.TANGERINE)
+            R.id.fontLobster -> updateAppFont(Constants.Font.LOBSTER)
+            R.id.fontUnifraktur -> updateAppFont(Constants.Font.UNIFRAKTUR)
+            R.id.cgmToggle -> toggleCgm()
+            R.id.cgmNotifAccess -> openNotificationAccessSettings()
+            R.id.homeColorCurrent -> binding.homeColorSelectLayout.visibility = View.VISIBLE
+            R.id.homeColorDefault -> updateHomeColor(0)
+            R.id.homeColorSnow -> updateHomeColor(0xFFECEFF4.toInt())
+            R.id.homeColorTeal -> updateHomeColor(0xFF88C0D0.toInt())
+            R.id.homeColorBlue -> updateHomeColor(0xFF81A1C1.toInt())
+            R.id.homeColorPurple -> updateHomeColor(0xFFB48EAD.toInt())
+            R.id.homeColorGreen -> updateHomeColor(0xFFA3BE8C.toInt())
+            R.id.homeColorYellow -> updateHomeColor(0xFFEBCB8B.toInt())
+            R.id.homeColorOrange -> updateHomeColor(0xFFD08770.toInt())
+            R.id.homeColorRed -> updateHomeColor(0xFFBF616A.toInt())
 
             R.id.tvGestures -> binding.flSwipeDown.visibility = View.VISIBLE
 
@@ -157,26 +206,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.swipeDownAction -> binding.swipeDownSelectLayout.visibility = View.VISIBLE
             R.id.notifications -> updateSwipeDownAction(Constants.SwipeDownAction.NOTIFICATIONS)
             R.id.search -> updateSwipeDownAction(Constants.SwipeDownAction.SEARCH)
-
-            R.id.aboutOlauncher -> {
-                prefs.aboutClicked = true
-                requireContext().openUrl(Constants.URL_ABOUT_OLAUNCHER)
-            }
-
-            R.id.share -> requireActivity().shareApp()
-            R.id.rate -> {
-                prefs.rateClicked = true
-                requireActivity().rateApp()
-            }
-
-            R.id.twitter -> requireContext().openUrl(Constants.URL_TWITTER_TANUJ)
-            R.id.github -> requireContext().openUrl(Constants.URL_OLAUNCHER_GITHUB)
-            R.id.privacy -> requireContext().openUrl(Constants.URL_OLAUNCHER_PRIVACY)
-            R.id.footer -> {
-                requireContext().openUrl(
-                    if (showPentastic) Constants.URL_PENTASTIC else Constants.URL_NTS
-                )
-            }
         }
     }
 
@@ -188,7 +217,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
                 requireContext().showToast(getString(R.string.alignment_changed))
             }
 
-            R.id.dailyWallpaper -> removeWallpaper()
             R.id.appThemeText -> {
                 binding.appThemeSelectLayout.visibility = View.VISIBLE
                 binding.themeSystem.visibility = View.VISIBLE
@@ -196,7 +224,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
             R.id.swipeLeftApp -> toggleSwipeLeft()
             R.id.swipeRightApp -> toggleSwipeRight()
-            R.id.toggleLock -> startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
         return true
     }
@@ -206,15 +233,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.scrollLayout.setOnClickListener(this)
         binding.appInfo.setOnClickListener(this)
         binding.setLauncher.setOnClickListener(this)
-        binding.aboutOlauncher.setOnClickListener(this)
-        binding.moreFeatures.setOnClickListener(this)
         binding.autoShowKeyboard.setOnClickListener(this)
-        binding.toggleLock.setOnClickListener(this)
-        binding.homeButtonRecents.setOnClickListener(this)
         binding.homeAppsNum.setOnClickListener(this)
-        binding.screenTimeOnOff.setOnClickListener(this)
-        binding.dailyWallpaperUrl.setOnClickListener(this)
-        binding.dailyWallpaper.setOnClickListener(this)
         binding.alignment.setOnClickListener(this)
         binding.alignmentLeft.setOnClickListener(this)
         binding.alignmentCenter.setOnClickListener(this)
@@ -235,16 +255,38 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.themeDark.setOnClickListener(this)
         binding.themeSystem.setOnClickListener(this)
         binding.textSizeValue.setOnClickListener(this)
-        binding.actionAccessibility.setOnClickListener(this)
-        binding.closeAccessibility.setOnClickListener(this)
-        binding.notWorking.setOnClickListener(this)
-
-        binding.share.setOnClickListener(this)
-        binding.rate.setOnClickListener(this)
-        binding.twitter.setOnClickListener(this)
-        binding.github.setOnClickListener(this)
-        binding.privacy.setOnClickListener(this)
-        binding.footer.setOnClickListener(this)
+        binding.appFontText.setOnClickListener(this)
+        binding.fontLight.setOnClickListener(this)
+        binding.fontMono.setOnClickListener(this)
+        binding.fontJetbrains.setOnClickListener(this)
+        binding.fontSpaceMono.setOnClickListener(this)
+        binding.fontOrbitron.setOnClickListener(this)
+        binding.fontVt323.setOnClickListener(this)
+        binding.fontPressStart.setOnClickListener(this)
+        binding.fontMajorMono.setOnClickListener(this)
+        binding.fontBungee.setOnClickListener(this)
+        binding.fontMonoton.setOnClickListener(this)
+        binding.fontBebas.setOnClickListener(this)
+        binding.fontPacifico.setOnClickListener(this)
+        binding.fontMarker.setOnClickListener(this)
+        binding.fontPlayfair.setOnClickListener(this)
+        binding.fontCormorant.setOnClickListener(this)
+        binding.fontCinzel.setOnClickListener(this)
+        binding.fontTangerine.setOnClickListener(this)
+        binding.fontLobster.setOnClickListener(this)
+        binding.fontUnifraktur.setOnClickListener(this)
+        binding.cgmToggle.setOnClickListener(this)
+        binding.cgmNotifAccess.setOnClickListener(this)
+        binding.homeColorCurrent.setOnClickListener(this)
+        binding.homeColorDefault.setOnClickListener(this)
+        binding.homeColorSnow.setOnClickListener(this)
+        binding.homeColorTeal.setOnClickListener(this)
+        binding.homeColorBlue.setOnClickListener(this)
+        binding.homeColorPurple.setOnClickListener(this)
+        binding.homeColorGreen.setOnClickListener(this)
+        binding.homeColorYellow.setOnClickListener(this)
+        binding.homeColorOrange.setOnClickListener(this)
+        binding.homeColorRed.setOnClickListener(this)
 
         binding.maxApps0.setOnClickListener(this)
         binding.maxApps1.setOnClickListener(this)
@@ -259,12 +301,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.textSizeMinus.setOnClickListener(this)
         binding.textSizePlus.setOnClickListener(this)
 
-        binding.dailyWallpaper.setOnLongClickListener(this)
         binding.alignment.setOnLongClickListener(this)
         binding.appThemeText.setOnLongClickListener(this)
         binding.swipeLeftApp.setOnLongClickListener(this)
         binding.swipeRightApp.setOnLongClickListener(this)
-        binding.toggleLock.setOnLongClickListener(this)
     }
 
     private fun initObservers() {
@@ -378,90 +418,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             prefs.lockModeOn = isAdmin
     }
 
-    private fun toggleAccessibilityVisibility(show: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-            binding.notWorking.visibility = View.VISIBLE
-        if (isAccessServiceEnabled(requireContext()))
-            binding.actionAccessibility.text = getString(R.string.disable)
-        binding.accessibilityLayout.isVisible = show
-        binding.scrollView.animateAlpha(if (show) 0.5f else 1f)
-    }
 
-    private fun openAccessibilityService() {
-        toggleAccessibilityVisibility(false)
-        // prefs.lockModeOn = true
-        populateLockSettings()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-    }
-
-    private fun toggleLockMode() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            if (!prefs.lockModeOn && !isAccessServiceEnabled(requireContext())) {
-                toggleAccessibilityVisibility(true)
-                return
-            }
-            prefs.lockModeOn = !prefs.lockModeOn
-        } else {
-            val isAdmin: Boolean = deviceManager.isAdminActive(componentName)
-            if (isAdmin) {
-                removeActiveAdmin("Admin permission removed.")
-                prefs.lockModeOn = false
-            } else {
-                val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
-                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName)
-                intent.putExtra(
-                    DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                    getString(R.string.admin_permission_message)
-                )
-                requireActivity().startActivityForResult(intent, Constants.REQUEST_CODE_ENABLE_ADMIN)
-            }
-        }
-        populateLockSettings()
-    }
-
-    private fun removeActiveAdmin(toastMessage: String? = null) {
-        try {
-            deviceManager.removeActiveAdmin(componentName) // for backward compatibility
-            requireContext().showToast(toastMessage)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun removeWallpaper() {
-        if (requireContext().isEinkDisplay()) {
-            prefs.appTheme = AppCompatDelegate.MODE_NIGHT_NO
-            setPlainWallpaper(requireContext(), android.R.color.white)
-        } else {
-            prefs.appTheme = AppCompatDelegate.MODE_NIGHT_YES
-            setPlainWallpaper(requireContext(), android.R.color.black)
-        }
-        if (!prefs.dailyWallpaper) return
-        prefs.dailyWallpaper = false
-        populateWallpaperText()
-        viewModel.cancelWallpaperWorker()
-    }
-
-    private fun toggleDailyWallpaperUpdate() {
-        if (prefs.dailyWallpaper.not() && prefs.appTheme == AppCompatDelegate.MODE_NIGHT_YES && viewModel.isOlauncherDefault.value == false) {
-            requireContext().showToast(R.string.set_as_default_launcher_first)
-            return
-        }
-        prefs.dailyWallpaper = !prefs.dailyWallpaper
-        populateWallpaperText()
-        if (prefs.dailyWallpaper) {
-            viewModel.setWallpaperWorker()
-            showWallpaperToasts()
-        } else viewModel.cancelWallpaperWorker()
-    }
-
-    private fun showWallpaperToasts() {
-        if (isOlauncherDefault(requireContext()))
-            requireContext().showToast(getString(R.string.your_wallpaper_will_update_shortly))
-        else
-            requireContext().showToast(getString(R.string.olauncher_is_not_default_launcher), Toast.LENGTH_LONG)
-    }
 
     private fun updateHomeAppsNum(num: Int) {
         binding.homeAppsNum.text = num.toString()
@@ -489,9 +446,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             pendingTextSizeScale = -1f
             return
         }
+        val ratio = pendingTextSizeScale / prefs.textSizeScale
         prefs.textSizeScale = pendingTextSizeScale
         pendingTextSizeScale = -1f
-        requireActivity().recreate()
+        requireActivity().window.decorView.scaleTextSizes(ratio)
     }
 
     private fun toggleKeyboardText() {
@@ -513,23 +471,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun setAppTheme(theme: Int) {
         if (AppCompatDelegate.getDefaultNightMode() == theme) return
-        if (prefs.dailyWallpaper) {
-            setPlainWallpaper(theme)
-            viewModel.setWallpaperWorker()
-        }
         requireActivity().recreate()
-    }
-
-    private fun setPlainWallpaper(appTheme: Int) {
-        when (appTheme) {
-            AppCompatDelegate.MODE_NIGHT_YES -> setPlainWallpaper(requireContext(), android.R.color.black)
-            AppCompatDelegate.MODE_NIGHT_NO -> setPlainWallpaper(requireContext(), android.R.color.white)
-            else -> {
-                if (requireContext().isDarkThemeOn())
-                    setPlainWallpaper(requireContext(), android.R.color.black)
-                else setPlainWallpaper(requireContext(), android.R.color.white)
-            }
-        }
     }
 
     private fun populateAppThemeText(appTheme: Int = prefs.appTheme) {
@@ -546,21 +488,94 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.textSizeCurrent.text = formatted
     }
 
-    private fun populateScreenTimeOnOff() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (requireContext().appUsagePermissionGranted()) binding.screenTimeOnOff.text = getString(R.string.on)
-            else binding.screenTimeOnOff.text = getString(R.string.off)
-        } else binding.screenTimeLayout.visibility = View.GONE
+    private fun applyFontPreviewToButtons() {
+        val ctx = requireContext()
+        binding.fontLight.typeface = ctx.getAppTypeface(Constants.Font.LIGHT)
+        binding.fontMono.typeface = ctx.getAppTypeface(Constants.Font.MONO)
+        binding.fontJetbrains.typeface = ctx.getAppTypeface(Constants.Font.JETBRAINS)
+        binding.fontSpaceMono.typeface = ctx.getAppTypeface(Constants.Font.SPACE_MONO)
+        binding.fontOrbitron.typeface = ctx.getAppTypeface(Constants.Font.ORBITRON)
+        binding.fontVt323.typeface = ctx.getAppTypeface(Constants.Font.VT323)
+        binding.fontPressStart.typeface = ctx.getAppTypeface(Constants.Font.PRESS_START)
+        binding.fontMajorMono.typeface = ctx.getAppTypeface(Constants.Font.MAJOR_MONO)
+        binding.fontBungee.typeface = ctx.getAppTypeface(Constants.Font.BUNGEE)
+        binding.fontMonoton.typeface = ctx.getAppTypeface(Constants.Font.MONOTON)
+        binding.fontBebas.typeface = ctx.getAppTypeface(Constants.Font.BEBAS)
+        binding.fontPacifico.typeface = ctx.getAppTypeface(Constants.Font.PACIFICO)
+        binding.fontMarker.typeface = ctx.getAppTypeface(Constants.Font.MARKER)
+        binding.fontPlayfair.typeface = ctx.getAppTypeface(Constants.Font.PLAYFAIR)
+        binding.fontCormorant.typeface = ctx.getAppTypeface(Constants.Font.CORMORANT)
+        binding.fontCinzel.typeface = ctx.getAppTypeface(Constants.Font.CINZEL)
+        binding.fontTangerine.typeface = ctx.getAppTypeface(Constants.Font.TANGERINE)
+        binding.fontLobster.typeface = ctx.getAppTypeface(Constants.Font.LOBSTER)
+        binding.fontUnifraktur.typeface = ctx.getAppTypeface(Constants.Font.UNIFRAKTUR)
+    }
+
+    private fun populateAppFont(fontId: Int = prefs.appFont) {
+        binding.appFontText.text = getString(
+            when (fontId) {
+                Constants.Font.MONO -> R.string.font_mono
+                Constants.Font.JETBRAINS -> R.string.font_jetbrains
+                Constants.Font.SPACE_MONO -> R.string.font_space_mono
+                Constants.Font.ORBITRON -> R.string.font_orbitron
+                Constants.Font.VT323 -> R.string.font_vt323
+                Constants.Font.PRESS_START -> R.string.font_press_start
+                Constants.Font.MAJOR_MONO -> R.string.font_major_mono
+                Constants.Font.BUNGEE -> R.string.font_bungee
+                Constants.Font.MONOTON -> R.string.font_monoton
+                Constants.Font.BEBAS -> R.string.font_bebas
+                Constants.Font.PACIFICO -> R.string.font_pacifico
+                Constants.Font.MARKER -> R.string.font_marker
+                Constants.Font.PLAYFAIR -> R.string.font_playfair
+                Constants.Font.CORMORANT -> R.string.font_cormorant
+                Constants.Font.CINZEL -> R.string.font_cinzel
+                Constants.Font.TANGERINE -> R.string.font_tangerine
+                Constants.Font.LOBSTER -> R.string.font_lobster
+                Constants.Font.UNIFRAKTUR -> R.string.font_unifraktur
+                else -> R.string.font_light
+            }
+        )
+    }
+
+    private fun populateHomeColor() {
+        val color = prefs.homeTextColor
+        binding.homeColorCurrent.setTextColor(
+            if (color != 0) color
+            else requireContext().getColorFromAttr(R.attr.primaryColor)
+        )
+    }
+
+    private fun updateHomeColor(color: Int) {
+        binding.homeColorSelectLayout.visibility = View.GONE
+        prefs.homeTextColor = color
+        populateHomeColor()
+    }
+
+    private fun populateCgm() {
+        binding.cgmToggle.text = getString(if (prefs.cgmEnabled) R.string.on else R.string.off)
+    }
+
+    private fun toggleCgm() {
+        prefs.cgmEnabled = !prefs.cgmEnabled
+        populateCgm()
+    }
+
+    private fun openNotificationAccessSettings() {
+        startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+    }
+
+    private fun updateAppFont(fontId: Int) {
+        binding.appFontSelectLayout.visibility = View.GONE
+        if (prefs.appFont == fontId) return
+        prefs.appFont = fontId
+        populateAppFont(fontId)
+        binding.root.applyAppFont(requireContext().getAppTypeface(fontId))
+        applyFontPreviewToButtons()
     }
 
     private fun populateKeyboardText() {
         if (prefs.autoShowKeyboard) binding.autoShowKeyboard.text = getString(R.string.on)
         else binding.autoShowKeyboard.text = getString(R.string.off)
-    }
-
-    private fun populateWallpaperText() {
-        if (prefs.dailyWallpaper) binding.dailyWallpaper.text = getString(R.string.on)
-        else binding.dailyWallpaper.text = getString(R.string.off)
     }
 
     private fun updateHomeBottomAlignment() {
@@ -582,36 +597,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.alignmentBottom.text = if (prefs.homeBottomAlignment)
             getString(R.string.bottom_on)
         else getString(R.string.bottom_off)
-    }
-
-    private fun toggleHomeButtonRecents() {
-        if (!prefs.homeButtonShowRecents && !isAccessServiceEnabled(requireContext())) {
-            toggleAccessibilityVisibility(true)
-            return
-        }
-        prefs.homeButtonShowRecents = !prefs.homeButtonShowRecents
-        populateHomeButtonRecents()
-    }
-
-    private fun populateHomeButtonRecents() {
-        binding.homeButtonRecents.text = getString(
-            if (prefs.homeButtonShowRecents && isAccessServiceEnabled(requireContext())) R.string.on
-            else R.string.off
-        )
-    }
-
-    private fun populateLockSettings() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            binding.toggleLock.text = getString(
-                if (prefs.lockModeOn && isAccessServiceEnabled(requireContext())) R.string.on
-                else R.string.off
-            )
-        } else {
-            binding.toggleLock.text = getString(
-                if (prefs.lockModeOn) R.string.on
-                else R.string.off
-            )
-        }
     }
 
     private fun populateSwipeDownAction() {
@@ -659,11 +644,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun populateActionHints() {
-        if (prefs.aboutClicked.not())
-            binding.aboutOlauncher.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_info, 0)
-        if (viewModel.isOlauncherDefault.value != true) return
-        if (prefs.rateClicked.not() && prefs.toShowHintCounter > Constants.HINT_RATE_US && prefs.toShowHintCounter < Constants.HINT_RATE_US + 100)
-            binding.rate.setCompoundDrawablesWithIntrinsicBounds(0, android.R.drawable.arrow_down_float, 0, 0)
     }
 
     private fun populateProMessage() {

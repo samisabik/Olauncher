@@ -20,6 +20,9 @@ import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
 import app.olauncher.databinding.AdapterAppDrawerBinding
 import app.olauncher.databinding.AdapterPrivateSpaceHeaderBinding
+import app.olauncher.helper.applyAppFont
+import app.olauncher.helper.applyAppTextSize
+import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.hideKeyboard
 import app.olauncher.helper.isSystemApp
 import app.olauncher.helper.showKeyboard
@@ -75,13 +78,17 @@ class AppDrawerAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val typeface = parent.context.getAppTypeface()
         return when (viewType) {
             VIEW_TYPE_PRIVATE_HEADER -> PrivateSpaceHeaderViewHolder(
                 AdapterPrivateSpaceHeaderBinding.inflate(
                     LayoutInflater.from(parent.context),
                     parent,
                     false
-                )
+                ).also {
+                    it.root.applyAppFont(typeface)
+                    it.root.applyAppTextSize(parent.context)
+                }
             )
 
             else -> ViewHolder(
@@ -89,7 +96,10 @@ class AppDrawerAdapter(
                     LayoutInflater.from(parent.context),
                     parent,
                     false
-                )
+                ).also {
+                    it.root.applyAppFont(typeface)
+                    it.root.applyAppTextSize(parent.context)
+                }
             )
         }
     }

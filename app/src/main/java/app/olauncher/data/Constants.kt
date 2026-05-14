@@ -46,6 +46,28 @@ object Constants {
         const val NOTIFICATIONS = 2
     }
 
+    object Font {
+        const val LIGHT = 0
+        const val MONO = 1
+        const val JETBRAINS = 2
+        const val SPACE_MONO = 3
+        const val ORBITRON = 4
+        const val VT323 = 5
+        const val PRESS_START = 6
+        const val MAJOR_MONO = 7
+        const val BUNGEE = 8
+        const val MONOTON = 9
+        const val BEBAS = 10
+        const val PACIFICO = 11
+        const val MARKER = 12
+        const val PLAYFAIR = 13
+        const val CORMORANT = 14
+        const val CINZEL = 15
+        const val TANGERINE = 16
+        const val LOBSTER = 17
+        const val UNIFRAKTUR = 18
+    }
+
     object CharacterIndicator {
         const val SHOW = 102
         const val HIDE = 101

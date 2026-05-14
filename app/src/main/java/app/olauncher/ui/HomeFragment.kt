@@ -3,6 +3,7 @@ package app.olauncher.ui
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.LauncherApps
 import android.content.res.Configuration
 import android.os.BatteryManager
@@ -31,8 +32,15 @@ import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
+import app.olauncher.helper.BgFormat
+import app.olauncher.helper.BgHistory
+import app.olauncher.helper.BgUpdates
 import app.olauncher.helper.appUsagePermissionGranted
+import app.olauncher.helper.getColorFromAttr
+import app.olauncher.helper.applyAppFont
+import app.olauncher.helper.applyAppTextSize
 import app.olauncher.helper.dpToPx
+import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.expandNotificationDrawer
 import app.olauncher.helper.getChangedAppTheme
 import app.olauncher.helper.getUserHandleFromString
@@ -59,6 +67,19 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
+    private var showingBgHistory = false
+
+    private val batteryReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+            val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+            if (level >= 0 && scale > 0 && _binding != null) {
+                val pct = level * 100 / scale
+                binding.battery.text = "~ $pct%"
+            }
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
@@ -77,11 +98,22 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         setHomeAlignment(prefs.homeAlignment)
         initSwipeTouchListener()
         initClickListeners()
+        populateBg()
+        BgUpdates.set { binding.bgReading.post { populateBg() } }
+        view.applyAppFont(requireContext().getAppTypeface())
+        view.applyAppTextSize(requireContext())
+        applyHomeTextColor()
     }
 
     override fun onResume() {
         super.onResume()
         populateHomeScreen(false)
+        populateBg()
+        applyHomeTextColor()
+        try {
+            requireContext().registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        } catch (_: Exception) {
+        }
         viewModel.isOlauncherDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
@@ -92,9 +124,8 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             R.id.lock -> {}
             R.id.recents -> {}
             R.id.clock -> openClockApp()
-            R.id.date -> openCalendarApp()
+            R.id.bgReading -> openCamAps()
             R.id.setDefaultLauncher -> viewModel.resetLauncherLiveData.call()
-            R.id.tvScreenTime -> openScreenTimeDigitalWellbeing()
 
             else -> {
                 try { // Launch app
@@ -105,6 +136,23 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                 }
             }
         }
+    }
+
+    private fun openCamAps() {
+        val pm = requireContext().packageManager
+        val candidates = buildList {
+            if (prefs.cgmPackage.isNotBlank()) add(prefs.cgmPackage)
+            add("com.camdiab.fx_alert.mmoll")
+            add("com.camdiab.fx_alert.mgdl")
+        }
+        for (pkg in candidates) {
+            val intent = pm.getLaunchIntentForPackage(pkg)
+            if (intent != null) {
+                startActivity(intent)
+                return
+            }
+        }
+        requireContext().showToast("CamAPS FX not found")
     }
 
     private fun openClockApp() {
@@ -148,18 +196,9 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                 prefs.clockAppUser = ""
             }
 
-            R.id.date -> {
-                showAppList(Constants.FLAG_SET_CALENDAR_APP)
-                prefs.calendarAppPackage = ""
-                prefs.calendarAppClassName = ""
-                prefs.calendarAppUser = ""
-            }
-
-            R.id.tvScreenTime -> {
-                showAppList(Constants.FLAG_SET_SCREEN_TIME_APP)
-                prefs.screenTimeAppPackage = ""
-                prefs.screenTimeAppClassName = ""
-                prefs.screenTimeAppUser = ""
+            R.id.bgReading -> {
+                showingBgHistory = !showingBgHistory
+                populateBg()
             }
 
             R.id.setDefaultLauncher -> {
@@ -201,12 +240,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         viewModel.toggleDateTime.observe(viewLifecycleOwner) {
             populateDateTime()
         }
-        viewModel.screenTimeValue.observe(viewLifecycleOwner) {
-            it?.let { binding.tvScreenTime.text = it }
-        }
-        viewModel.showRecentApps.observe(viewLifecycleOwner) {
-            binding.recents.performClick()
-        }
     }
 
     private fun initSwipeTouchListener() {
@@ -226,19 +259,18 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         binding.lock.setOnClickListener(this)
         binding.recents.setOnClickListener(this)
         binding.clock.setOnClickListener(this)
-        binding.date.setOnClickListener(this)
         binding.clock.setOnLongClickListener(this)
-        binding.date.setOnLongClickListener(this)
+        binding.bgReading.setOnClickListener(this)
+        binding.bgReading.setOnLongClickListener(this)
         binding.setDefaultLauncher.setOnClickListener(this)
         binding.setDefaultLauncher.setOnLongClickListener(this)
-        binding.tvScreenTime.setOnClickListener(this)
-        binding.tvScreenTime.setOnLongClickListener(this)
     }
 
     private fun setHomeAlignment(horizontalGravity: Int = prefs.homeAlignment) {
         val verticalGravity = if (prefs.homeBottomAlignment) Gravity.BOTTOM else Gravity.CENTER_VERTICAL
         binding.homeAppsLayout.gravity = horizontalGravity or verticalGravity
-        binding.dateTimeLayout.gravity = horizontalGravity
+        binding.bgReading.gravity = horizontalGravity
+        binding.clock.gravity = horizontalGravity
         binding.homeApp1.gravity = horizontalGravity
         binding.homeApp2.gravity = horizontalGravity
         binding.homeApp3.gravity = horizontalGravity
@@ -250,56 +282,61 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     }
 
     private fun populateDateTime() {
-        binding.dateTimeLayout.isVisible = prefs.dateTimeVisibility != Constants.DateTime.OFF
-        binding.clock.isVisible = Constants.DateTime.isTimeVisible(prefs.dateTimeVisibility)
-        binding.date.isVisible = Constants.DateTime.isDateVisible(prefs.dateTimeVisibility)
-
-//        var dateText = SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date())
-        val dateFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
-        var dateText = dateFormat.format(Date())
-
-        if (!prefs.showStatusBar) {
-            val battery = (requireContext().getSystemService(Context.BATTERY_SERVICE) as BatteryManager)
-                .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-            if (battery > 0)
-                dateText = getString(R.string.day_battery, dateText, battery)
-        }
-        binding.date.text = dateText.replace(".,", ",")
+        binding.clockRow.isVisible = prefs.dateTimeVisibility != Constants.DateTime.OFF
     }
 
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun populateScreenTime() {
-        if (requireContext().appUsagePermissionGranted().not()) return
-
-        viewModel.getTodaysScreenTime()
-        binding.tvScreenTime.visibility = View.VISIBLE
-
-        val isLandscape = resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        val horizontalMargin = if (isLandscape) 64.dpToPx() else 10.dpToPx()
-        val marginTop = if (isLandscape) {
-            if (prefs.dateTimeVisibility == Constants.DateTime.DATE_ONLY) 36.dpToPx() else 56.dpToPx()
-        } else {
-            if (prefs.dateTimeVisibility == Constants.DateTime.DATE_ONLY) 45.dpToPx() else 72.dpToPx()
+    private fun populateBg() {
+        val text = prefs.cgmRawText
+        if (!prefs.cgmEnabled || text.isBlank()) {
+            binding.bgReading.isVisible = false
+            return
         }
-        val params = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT
-        ).apply {
-            topMargin = marginTop
-            marginStart = horizontalMargin
-            marginEnd = horizontalMargin
-            gravity = if (prefs.homeAlignment == Gravity.END) Gravity.START else Gravity.END
+        val unit = prefs.cgmUnit.ifBlank { "mmol/L" }
+        val display = if (showingBgHistory) {
+            val spark = BgHistory.sparkline(prefs, useMmol = unit.equals("mmol/L", true))
+            if (spark.isBlank()) "(no history)" else spark
+        } else if (text.contains(unit, ignoreCase = true)) text
+        else text.replaceFirst(Regex("""\d+([.,]\d+)?"""), "$0 $unit")
+        binding.bgReading.text = display
+        binding.bgReading.alpha = if (BgFormat.isStale(prefs.cgmBgTime)) 0.4f else 1f
+        binding.bgReading.setTextColor(bgColorForText(text, unit))
+        binding.bgReading.isVisible = true
+    }
+
+    private fun applyHomeTextColor() {
+        val color = if (prefs.homeTextColor != 0) prefs.homeTextColor
+        else requireContext().getColorFromAttr(R.attr.primaryColor)
+        binding.clock.setTextColor(color)
+        binding.battery.setTextColor(color)
+        binding.homeApp1.setTextColor(color)
+        binding.homeApp2.setTextColor(color)
+        binding.homeApp3.setTextColor(color)
+        binding.homeApp4.setTextColor(color)
+        binding.homeApp5.setTextColor(color)
+        binding.homeApp6.setTextColor(color)
+        binding.homeApp7.setTextColor(color)
+        binding.homeApp8.setTextColor(color)
+    }
+
+    private fun bgColorForText(text: String, unit: String): Int {
+        val nordRed = 0xFFBF616A.toInt()
+        val nordOrange = 0xFFD08770.toInt()
+        val nordGreen = 0xFFA3BE8C.toInt()
+        val defaultColor = requireContext().getColorFromAttr(R.attr.primaryColor)
+        val n = Regex("""\d+([.,]\d+)?""").find(text)?.value
+            ?.replace(',', '.')?.toFloatOrNull() ?: return defaultColor
+        val mmol = if (unit.equals("mg/dL", true)) n / 18.0182f else n
+        return when {
+            mmol < 4f -> nordRed
+            mmol <= 10f -> nordGreen
+            mmol <= 13f -> nordOrange
+            else -> nordRed
         }
-        binding.tvScreenTime.layoutParams = params
-        binding.tvScreenTime.setPadding(10.dpToPx())
     }
 
     private fun populateHomeScreen(appCountUpdated: Boolean) {
         if (appCountUpdated) hideHomeApps()
         populateDateTime()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            populateScreenTime()
 
         val homeAppsNum = prefs.homeAppsNum
         if (homeAppsNum == 0) return
@@ -543,20 +580,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         }
     }
 
-    private fun lockPhone() {
-        requireActivity().runOnUiThread {
-            try {
-                deviceManager.lockNow()
-            } catch (e: SecurityException) {
-                requireContext().showToast(getString(R.string.please_turn_on_double_tap_to_unlock), Toast.LENGTH_LONG)
-                findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
-            } catch (e: Exception) {
-                requireContext().showToast(getString(R.string.launcher_failed_to_lock_device), Toast.LENGTH_LONG)
-                prefs.lockModeOn = false
-            }
-        }
-    }
-
     private fun showStatusBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
             requireActivity().window.insetsController?.show(WindowInsets.Type.statusBars())
@@ -568,13 +591,19 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     }
 
     private fun hideStatusBar() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
-            requireActivity().window.insetsController?.hide(WindowInsets.Type.statusBars())
-        else {
-            @Suppress("DEPRECATION")
-            requireActivity().window.decorView.apply {
-                systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE or View.SYSTEM_UI_FLAG_FULLSCREEN
+        val window = requireActivity().window
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.insetsController?.let {
+                it.systemBarsBehavior = android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                it.hide(WindowInsets.Type.statusBars())
             }
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
         }
     }
 
@@ -587,37 +616,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             viewModel.setWallpaperWorker()
         }
         requireActivity().recreate()
-    }
-
-    private fun openScreenTimeDigitalWellbeing() {
-        if (prefs.screenTimeAppPackage.isNotBlank()) {
-            launchApp(
-                "Screen Time",
-                prefs.screenTimeAppPackage,
-                prefs.screenTimeAppClassName,
-                prefs.screenTimeAppUser
-            )
-            return
-        }
-        val intent = Intent()
-        try {
-            intent.setClassName(
-                Constants.DIGITAL_WELLBEING_PACKAGE_NAME,
-                Constants.DIGITAL_WELLBEING_ACTIVITY
-            )
-            startActivity(intent)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            try {
-                intent.setClassName(
-                    Constants.DIGITAL_WELLBEING_SAMSUNG_PACKAGE_NAME,
-                    Constants.DIGITAL_WELLBEING_SAMSUNG_ACTIVITY
-                )
-                startActivity(intent)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
     }
 
     private fun showLongPressToast() = requireContext().showToast(getString(R.string.long_press_to_select_app))
@@ -656,15 +654,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-            }
-
-            override fun onDoubleClick() {
-                super.onDoubleClick()
-                if (!prefs.lockModeOn) return
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                    binding.lock.performClick()
-                else
-                    lockPhone()
             }
 
             override fun onClick() {
@@ -708,7 +697,16 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         }
     }
 
+    override fun onPause() {
+        try {
+            requireContext().unregisterReceiver(batteryReceiver)
+        } catch (_: Exception) {
+        }
+        super.onPause()
+    }
+
     override fun onDestroyView() {
+        BgUpdates.set(null)
         super.onDestroyView()
         _binding = null
     }

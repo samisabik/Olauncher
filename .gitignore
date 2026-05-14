@@ -16,3 +16,7 @@
 .externalNativeBuild
 .cxx
 google-services.json
+/CLAUDE.md
+/.claude/
+/.kotlin/
+/gradle/gradle-daemon-jvm.properties

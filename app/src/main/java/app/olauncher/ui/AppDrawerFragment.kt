@@ -20,7 +20,10 @@ import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentAppDrawerBinding
+import app.olauncher.helper.applyAppFont
+import app.olauncher.helper.applyAppTextSize
 import app.olauncher.helper.deletePinnedShortcut
+import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.hideKeyboard
 import app.olauncher.helper.isEinkDisplay
 import app.olauncher.helper.isPrivateSpaceProfile
@@ -71,6 +74,8 @@ class AppDrawerFragment : Fragment() {
         initAdapter()
         initObservers()
         initClickListeners()
+        view.applyAppFont(requireContext().getAppTypeface())
+        view.applyAppTextSize(requireContext())
     }
 
     private fun initViews() {
