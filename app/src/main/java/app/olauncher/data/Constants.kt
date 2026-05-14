@@ -55,17 +55,9 @@ object Constants {
         const val VT323 = 5
         const val PRESS_START = 6
         const val MAJOR_MONO = 7
-        const val BUNGEE = 8
         const val MONOTON = 9
-        const val BEBAS = 10
-        const val PACIFICO = 11
-        const val MARKER = 12
-        const val PLAYFAIR = 13
-        const val CORMORANT = 14
-        const val CINZEL = 15
-        const val TANGERINE = 16
-        const val LOBSTER = 17
-        const val UNIFRAKTUR = 18
+        const val INCONSOLATA = 19
+        const val ROBOTO_MONO = 20
     }
 
     object CharacterIndicator {

@@ -725,6 +725,26 @@
                                 android:text="@string/font_space_mono" />
 
                             <TextView
+                                android:id="@+id/fontRobotoMono"
+                                style="@style/TextSmallBold"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="16dp"
+                                android:gravity="center"
+                                android:paddingVertical="6dp"
+                                android:text="@string/font_roboto_mono" />
+
+                            <TextView
+                                android:id="@+id/fontInconsolata"
+                                style="@style/TextSmallBold"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="16dp"
+                                android:gravity="center"
+                                android:paddingVertical="6dp"
+                                android:text="@string/font_inconsolata" />
+
+                            <TextView
                                 android:id="@+id/fontOrbitron"
                                 style="@style/TextSmallBold"
                                 android:layout_width="wrap_content"
@@ -765,113 +785,13 @@
                                 android:text="@string/font_major_mono" />
 
                             <TextView
-                                android:id="@+id/fontBungee"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_bungee" />
-
-                            <TextView
                                 android:id="@+id/fontMonoton"
                                 style="@style/TextSmallBold"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
                                 android:gravity="center"
                                 android:paddingVertical="6dp"
                                 android:text="@string/font_monoton" />
-
-                            <TextView
-                                android:id="@+id/fontBebas"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_bebas" />
-
-                            <TextView
-                                android:id="@+id/fontPacifico"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_pacifico" />
-
-                            <TextView
-                                android:id="@+id/fontMarker"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_marker" />
-
-                            <TextView
-                                android:id="@+id/fontPlayfair"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_playfair" />
-
-                            <TextView
-                                android:id="@+id/fontCormorant"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_cormorant" />
-
-                            <TextView
-                                android:id="@+id/fontCinzel"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_cinzel" />
-
-                            <TextView
-                                android:id="@+id/fontTangerine"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_tangerine" />
-
-                            <TextView
-                                android:id="@+id/fontLobster"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="16dp"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_lobster" />
-
-                            <TextView
-                                android:id="@+id/fontUnifraktur"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:paddingVertical="6dp"
-                                android:text="@string/font_unifraktur" />
 
                         </LinearLayout>
                     </HorizontalScrollView>

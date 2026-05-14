@@ -112,14 +112,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         if (view.id != R.id.appFontText
             && view.id != R.id.fontLight && view.id != R.id.fontMono
             && view.id != R.id.fontJetbrains && view.id != R.id.fontSpaceMono
+            && view.id != R.id.fontRobotoMono && view.id != R.id.fontInconsolata
             && view.id != R.id.fontOrbitron && view.id != R.id.fontVt323
             && view.id != R.id.fontPressStart && view.id != R.id.fontMajorMono
-            && view.id != R.id.fontBungee && view.id != R.id.fontMonoton
-            && view.id != R.id.fontBebas && view.id != R.id.fontPacifico
-            && view.id != R.id.fontMarker && view.id != R.id.fontPlayfair
-            && view.id != R.id.fontCormorant && view.id != R.id.fontCinzel
-            && view.id != R.id.fontTangerine && view.id != R.id.fontLobster
-            && view.id != R.id.fontUnifraktur
+            && view.id != R.id.fontMonoton
         ) {
             binding.appFontSelectLayout.visibility = View.GONE
         }
@@ -158,21 +154,13 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.fontMono -> updateAppFont(Constants.Font.MONO)
             R.id.fontJetbrains -> updateAppFont(Constants.Font.JETBRAINS)
             R.id.fontSpaceMono -> updateAppFont(Constants.Font.SPACE_MONO)
+            R.id.fontRobotoMono -> updateAppFont(Constants.Font.ROBOTO_MONO)
+            R.id.fontInconsolata -> updateAppFont(Constants.Font.INCONSOLATA)
             R.id.fontOrbitron -> updateAppFont(Constants.Font.ORBITRON)
             R.id.fontVt323 -> updateAppFont(Constants.Font.VT323)
             R.id.fontPressStart -> updateAppFont(Constants.Font.PRESS_START)
             R.id.fontMajorMono -> updateAppFont(Constants.Font.MAJOR_MONO)
-            R.id.fontBungee -> updateAppFont(Constants.Font.BUNGEE)
             R.id.fontMonoton -> updateAppFont(Constants.Font.MONOTON)
-            R.id.fontBebas -> updateAppFont(Constants.Font.BEBAS)
-            R.id.fontPacifico -> updateAppFont(Constants.Font.PACIFICO)
-            R.id.fontMarker -> updateAppFont(Constants.Font.MARKER)
-            R.id.fontPlayfair -> updateAppFont(Constants.Font.PLAYFAIR)
-            R.id.fontCormorant -> updateAppFont(Constants.Font.CORMORANT)
-            R.id.fontCinzel -> updateAppFont(Constants.Font.CINZEL)
-            R.id.fontTangerine -> updateAppFont(Constants.Font.TANGERINE)
-            R.id.fontLobster -> updateAppFont(Constants.Font.LOBSTER)
-            R.id.fontUnifraktur -> updateAppFont(Constants.Font.UNIFRAKTUR)
             R.id.cgmToggle -> toggleCgm()
             R.id.cgmNotifAccess -> openNotificationAccessSettings()
             R.id.homeColorCurrent -> binding.homeColorSelectLayout.visibility = View.VISIBLE
@@ -260,21 +248,13 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.fontMono.setOnClickListener(this)
         binding.fontJetbrains.setOnClickListener(this)
         binding.fontSpaceMono.setOnClickListener(this)
+        binding.fontRobotoMono.setOnClickListener(this)
+        binding.fontInconsolata.setOnClickListener(this)
         binding.fontOrbitron.setOnClickListener(this)
         binding.fontVt323.setOnClickListener(this)
         binding.fontPressStart.setOnClickListener(this)
         binding.fontMajorMono.setOnClickListener(this)
-        binding.fontBungee.setOnClickListener(this)
         binding.fontMonoton.setOnClickListener(this)
-        binding.fontBebas.setOnClickListener(this)
-        binding.fontPacifico.setOnClickListener(this)
-        binding.fontMarker.setOnClickListener(this)
-        binding.fontPlayfair.setOnClickListener(this)
-        binding.fontCormorant.setOnClickListener(this)
-        binding.fontCinzel.setOnClickListener(this)
-        binding.fontTangerine.setOnClickListener(this)
-        binding.fontLobster.setOnClickListener(this)
-        binding.fontUnifraktur.setOnClickListener(this)
         binding.cgmToggle.setOnClickListener(this)
         binding.cgmNotifAccess.setOnClickListener(this)
         binding.homeColorCurrent.setOnClickListener(this)
@@ -494,21 +474,13 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.fontMono.typeface = ctx.getAppTypeface(Constants.Font.MONO)
         binding.fontJetbrains.typeface = ctx.getAppTypeface(Constants.Font.JETBRAINS)
         binding.fontSpaceMono.typeface = ctx.getAppTypeface(Constants.Font.SPACE_MONO)
+        binding.fontRobotoMono.typeface = ctx.getAppTypeface(Constants.Font.ROBOTO_MONO)
+        binding.fontInconsolata.typeface = ctx.getAppTypeface(Constants.Font.INCONSOLATA)
         binding.fontOrbitron.typeface = ctx.getAppTypeface(Constants.Font.ORBITRON)
         binding.fontVt323.typeface = ctx.getAppTypeface(Constants.Font.VT323)
         binding.fontPressStart.typeface = ctx.getAppTypeface(Constants.Font.PRESS_START)
         binding.fontMajorMono.typeface = ctx.getAppTypeface(Constants.Font.MAJOR_MONO)
-        binding.fontBungee.typeface = ctx.getAppTypeface(Constants.Font.BUNGEE)
         binding.fontMonoton.typeface = ctx.getAppTypeface(Constants.Font.MONOTON)
-        binding.fontBebas.typeface = ctx.getAppTypeface(Constants.Font.BEBAS)
-        binding.fontPacifico.typeface = ctx.getAppTypeface(Constants.Font.PACIFICO)
-        binding.fontMarker.typeface = ctx.getAppTypeface(Constants.Font.MARKER)
-        binding.fontPlayfair.typeface = ctx.getAppTypeface(Constants.Font.PLAYFAIR)
-        binding.fontCormorant.typeface = ctx.getAppTypeface(Constants.Font.CORMORANT)
-        binding.fontCinzel.typeface = ctx.getAppTypeface(Constants.Font.CINZEL)
-        binding.fontTangerine.typeface = ctx.getAppTypeface(Constants.Font.TANGERINE)
-        binding.fontLobster.typeface = ctx.getAppTypeface(Constants.Font.LOBSTER)
-        binding.fontUnifraktur.typeface = ctx.getAppTypeface(Constants.Font.UNIFRAKTUR)
     }
 
     private fun populateAppFont(fontId: Int = prefs.appFont) {
@@ -517,21 +489,13 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
                 Constants.Font.MONO -> R.string.font_mono
                 Constants.Font.JETBRAINS -> R.string.font_jetbrains
                 Constants.Font.SPACE_MONO -> R.string.font_space_mono
+                Constants.Font.ROBOTO_MONO -> R.string.font_roboto_mono
+                Constants.Font.INCONSOLATA -> R.string.font_inconsolata
                 Constants.Font.ORBITRON -> R.string.font_orbitron
                 Constants.Font.VT323 -> R.string.font_vt323
                 Constants.Font.PRESS_START -> R.string.font_press_start
                 Constants.Font.MAJOR_MONO -> R.string.font_major_mono
-                Constants.Font.BUNGEE -> R.string.font_bungee
                 Constants.Font.MONOTON -> R.string.font_monoton
-                Constants.Font.BEBAS -> R.string.font_bebas
-                Constants.Font.PACIFICO -> R.string.font_pacifico
-                Constants.Font.MARKER -> R.string.font_marker
-                Constants.Font.PLAYFAIR -> R.string.font_playfair
-                Constants.Font.CORMORANT -> R.string.font_cormorant
-                Constants.Font.CINZEL -> R.string.font_cinzel
-                Constants.Font.TANGERINE -> R.string.font_tangerine
-                Constants.Font.LOBSTER -> R.string.font_lobster
-                Constants.Font.UNIFRAKTUR -> R.string.font_unifraktur
                 else -> R.string.font_light
             }
         )
