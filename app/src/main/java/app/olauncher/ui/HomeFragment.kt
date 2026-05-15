@@ -33,7 +33,6 @@ import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
 import app.olauncher.helper.BgFormat
-import app.olauncher.helper.BgHistory
 import app.olauncher.helper.BgUpdates
 import app.olauncher.helper.appUsagePermissionGranted
 import app.olauncher.helper.getColorFromAttr
@@ -66,8 +65,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
-
-    private var showingBgHistory = false
 
     private val batteryReceiver = object : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -196,11 +193,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                 prefs.clockAppUser = ""
             }
 
-            R.id.bgReading -> {
-                showingBgHistory = !showingBgHistory
-                populateBg()
-            }
-
             R.id.setDefaultLauncher -> {
                 prefs.hideSetDefaultLauncher = true
                 binding.setDefaultLauncher.visibility = View.GONE
@@ -261,7 +253,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         binding.clock.setOnClickListener(this)
         binding.clock.setOnLongClickListener(this)
         binding.bgReading.setOnClickListener(this)
-        binding.bgReading.setOnLongClickListener(this)
         binding.setDefaultLauncher.setOnClickListener(this)
         binding.setDefaultLauncher.setOnLongClickListener(this)
     }
@@ -292,10 +283,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             return
         }
         val unit = prefs.cgmUnit.ifBlank { "mmol/L" }
-        val display = if (showingBgHistory) {
-            val spark = BgHistory.sparkline(prefs, useMmol = unit.equals("mmol/L", true))
-            if (spark.isBlank()) "(no history)" else spark
-        } else if (text.contains(unit, ignoreCase = true)) text
+        val display = if (text.contains(unit, ignoreCase = true)) text
         else text.replaceFirst(Regex("""\d+([.,]\d+)?"""), "$0 $unit")
         binding.bgReading.text = display
         binding.bgReading.alpha = if (BgFormat.isStale(prefs.cgmBgTime)) 0.4f else 1f

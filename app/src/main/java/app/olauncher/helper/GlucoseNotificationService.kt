@@ -40,12 +40,6 @@ class GlucoseNotificationService : NotificationListenerService() {
         val isMmol = sbn.packageName.substringAfterLast('.') != "mgdl"
         prefs.cgmUnit = if (isMmol) "mmol/L" else "mg/dL"
 
-        val num = Regex("""\d+(?:[.,]\d+)?""").find(candidate)?.value
-            ?.replace(',', '.')?.toFloatOrNull()
-        if (num != null) {
-            val mgdl = if (isMmol) num * 18.0182f else num
-            BgHistory.append(prefs, mgdl, sbn.postTime)
-        }
         BgUpdates.fire()
     }
 

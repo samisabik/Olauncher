@@ -220,10 +220,6 @@ class Prefs(context: Context) {
         get() = prefs.getString("CGM_PACKAGE", "").orEmpty()
         set(value) = prefs.edit { putString("CGM_PACKAGE", value).apply() }
 
-    var cgmHistory: String
-        get() = prefs.getString("CGM_HISTORY", "").orEmpty()
-        set(value) = prefs.edit { putString("CGM_HISTORY", value).apply() }
-
     var homeTextColor: Int
         get() = prefs.getInt("HOME_TEXT_COLOR", 0)
         set(value) = prefs.edit { putInt("HOME_TEXT_COLOR", value).apply() }
