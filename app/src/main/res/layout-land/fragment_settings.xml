@@ -32,11 +32,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:layout_marginHorizontal="20dp"
+                android:orientation="vertical">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -74,12 +71,11 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="32dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="vertical">
 
                 <TextView
                     style="@style/TextLarge"
@@ -407,12 +403,11 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="32dp"
                 android:clipChildren="false"
                 android:clipToPadding="false"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:orientation="vertical">
 
                 <TextView
                     style="@style/TextLarge"
@@ -1022,11 +1017,9 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
-                android:orientation="vertical"
-                android:padding="12dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="32dp"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tvGestures"
