@@ -1,7 +1,5 @@
 package app.olauncher.ui
 
-import android.app.admin.DevicePolicyManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -27,31 +25,22 @@ import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentSettingsBinding
 import app.olauncher.helper.animateAlpha
-import app.olauncher.helper.appUsagePermissionGranted
 import app.olauncher.helper.applyAppFont
-import app.olauncher.helper.applyAppTextSize
 import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.getColorFromAttr
 import app.olauncher.helper.scaleTextSizes
-import app.olauncher.helper.isAccessServiceEnabled
 import app.olauncher.helper.isDarkThemeOn
 import app.olauncher.helper.isEinkDisplay
 import app.olauncher.helper.isOlauncherDefault
 import app.olauncher.helper.isTablet
 import app.olauncher.helper.openAppInfo
 import app.olauncher.helper.openUrl
-import app.olauncher.helper.rateApp
-import app.olauncher.helper.setPlainWallpaper
-import app.olauncher.helper.shareApp
 import app.olauncher.helper.showToast
-import app.olauncher.listener.DeviceAdmin
 
 class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListener {
 
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
-    private lateinit var deviceManager: DevicePolicyManager
-    private lateinit var componentName: ComponentName
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -69,16 +58,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         } ?: throw Exception("Invalid Activity")
         viewModel.isOlauncherDefault()
 
-        deviceManager = requireContext().getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        componentName = ComponentName(requireContext(), DeviceAdmin::class.java)
-        checkAdminPermission()
 
         binding.homeAppsNum.text = prefs.homeAppsNum.toString()
-        populateProMessage()
         populateKeyboardText()
         binding.sortByUsage.text =
             getString(if (prefs.appsSortByUsage) R.string.on else R.string.off)
-        populateAppThemeText()
         populateTextSize()
         populateAppFont()
         populateCgm()
@@ -88,26 +72,21 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         populateDateTime()
         populateSwipeApps()
         populateSwipeDownAction()
-        populateActionHints()
         initClickListeners()
         initObservers()
 
         view.applyAppFont(requireContext().getAppTypeface())
-        view.applyAppTextSize(requireContext())
         applyFontPreviewToButtons()
     }
 
     override fun onClick(view: View) {
         binding.appsNumSelectLayout.visibility = View.GONE
         binding.dateTimeSelectLayout.visibility = View.GONE
-        binding.appThemeSelectLayout.visibility = View.GONE
         binding.swipeDownSelectLayout.visibility = View.GONE
         if (view.id != R.id.homeColorCurrent
-            && view.id != R.id.homeColorDefault && view.id != R.id.homeColorSnow
-            && view.id != R.id.homeColorTeal && view.id != R.id.homeColorBlue
-            && view.id != R.id.homeColorPurple && view.id != R.id.homeColorGreen
-            && view.id != R.id.homeColorYellow && view.id != R.id.homeColorOrange
-            && view.id != R.id.homeColorRed
+            && view.id != R.id.homeColorAuto
+            && view.id != R.id.homeColorHue && view.id != R.id.homeColorSat
+            && view.id != R.id.homeColorVal && view.id != R.id.homeColorHex
         ) {
             binding.homeColorSelectLayout.visibility = View.GONE
         }
@@ -147,10 +126,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.dateTimeOn -> toggleDateTime(Constants.DateTime.ON)
             R.id.dateTimeOff -> toggleDateTime(Constants.DateTime.OFF)
             R.id.dateOnly -> toggleDateTime(Constants.DateTime.DATE_ONLY)
-            R.id.appThemeText -> binding.appThemeSelectLayout.visibility = View.VISIBLE
-            R.id.themeLight -> updateTheme(AppCompatDelegate.MODE_NIGHT_NO)
-            R.id.themeDark -> updateTheme(AppCompatDelegate.MODE_NIGHT_YES)
-            R.id.themeSystem -> updateTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             R.id.textSizeValue -> binding.textSizesLayout.visibility = View.VISIBLE
             R.id.appFontText -> binding.appFontSelectLayout.visibility = View.VISIBLE
             R.id.fontLight -> updateAppFont(Constants.Font.LIGHT)
@@ -167,15 +142,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.cgmToggle -> toggleCgm()
             R.id.cgmNotifAccess -> openNotificationAccessSettings()
             R.id.homeColorCurrent -> binding.homeColorSelectLayout.visibility = View.VISIBLE
-            R.id.homeColorDefault -> updateHomeColor(0)
-            R.id.homeColorSnow -> updateHomeColor(0xFFECEFF4.toInt())
-            R.id.homeColorTeal -> updateHomeColor(0xFF88C0D0.toInt())
-            R.id.homeColorBlue -> updateHomeColor(0xFF81A1C1.toInt())
-            R.id.homeColorPurple -> updateHomeColor(0xFFB48EAD.toInt())
-            R.id.homeColorGreen -> updateHomeColor(0xFFA3BE8C.toInt())
-            R.id.homeColorYellow -> updateHomeColor(0xFFEBCB8B.toInt())
-            R.id.homeColorOrange -> updateHomeColor(0xFFD08770.toInt())
-            R.id.homeColorRed -> updateHomeColor(0xFFBF616A.toInt())
+            R.id.homeColorAuto -> updateHomeColor(0)
 
             R.id.tvGestures -> binding.flSwipeDown.visibility = View.VISIBLE
 
@@ -208,11 +175,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
                 requireContext().showToast(getString(R.string.alignment_changed))
             }
 
-            R.id.appThemeText -> {
-                binding.appThemeSelectLayout.visibility = View.VISIBLE
-                binding.themeSystem.visibility = View.VISIBLE
-            }
-
             R.id.swipeLeftApp -> toggleSwipeLeft()
             R.id.swipeRightApp -> toggleSwipeRight()
         }
@@ -242,10 +204,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.swipeDownAction.setOnClickListener(this)
         binding.search.setOnClickListener(this)
         binding.notifications.setOnClickListener(this)
-        binding.appThemeText.setOnClickListener(this)
-        binding.themeLight.setOnClickListener(this)
-        binding.themeDark.setOnClickListener(this)
-        binding.themeSystem.setOnClickListener(this)
         binding.textSizeValue.setOnClickListener(this)
         binding.appFontText.setOnClickListener(this)
         binding.fontLight.setOnClickListener(this)
@@ -262,15 +220,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.cgmToggle.setOnClickListener(this)
         binding.cgmNotifAccess.setOnClickListener(this)
         binding.homeColorCurrent.setOnClickListener(this)
-        binding.homeColorDefault.setOnClickListener(this)
-        binding.homeColorSnow.setOnClickListener(this)
-        binding.homeColorTeal.setOnClickListener(this)
-        binding.homeColorBlue.setOnClickListener(this)
-        binding.homeColorPurple.setOnClickListener(this)
-        binding.homeColorGreen.setOnClickListener(this)
-        binding.homeColorYellow.setOnClickListener(this)
-        binding.homeColorOrange.setOnClickListener(this)
-        binding.homeColorRed.setOnClickListener(this)
+        binding.homeColorAuto.setOnClickListener(this)
+        attachColorSliders()
 
         binding.maxApps0.setOnClickListener(this)
         binding.maxApps1.setOnClickListener(this)
@@ -286,16 +237,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.textSizePlus.setOnClickListener(this)
 
         binding.alignment.setOnLongClickListener(this)
-        binding.appThemeText.setOnLongClickListener(this)
         binding.swipeLeftApp.setOnLongClickListener(this)
         binding.swipeRightApp.setOnLongClickListener(this)
     }
 
     private fun initObservers() {
-        if (prefs.firstSettingsOpen) {
-            viewModel.showDialog.postValue(Constants.Dialog.ABOUT)
-            prefs.firstSettingsOpen = false
-        }
         viewModel.isOlauncherDefault.observe(viewLifecycleOwner) {
             if (it) {
                 binding.setLauncher.text = getString(R.string.change_default_launcher)
@@ -396,14 +342,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         )
     }
 
-    private fun checkAdminPermission() {
-        val isAdmin: Boolean = deviceManager.isAdminActive(componentName)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P)
-            prefs.lockModeOn = isAdmin
-    }
-
-
-
     private fun updateHomeAppsNum(num: Int) {
         binding.homeAppsNum.text = num.toString()
         binding.appsNumSelectLayout.visibility = View.GONE
@@ -430,10 +368,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             pendingTextSizeScale = -1f
             return
         }
-        val ratio = pendingTextSizeScale / prefs.textSizeScale
         prefs.textSizeScale = pendingTextSizeScale
         pendingTextSizeScale = -1f
-        requireActivity().window.decorView.scaleTextSizes(ratio)
     }
 
     private fun toggleKeyboardText() {
@@ -450,26 +386,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         prefs.appsSortByUsage = !prefs.appsSortByUsage
         binding.sortByUsage.text =
             getString(if (prefs.appsSortByUsage) R.string.on else R.string.off)
-    }
-
-    private fun updateTheme(appTheme: Int) {
-        if (AppCompatDelegate.getDefaultNightMode() == appTheme) return
-        prefs.appTheme = appTheme
-        populateAppThemeText(appTheme)
-        setAppTheme(appTheme)
-    }
-
-    private fun setAppTheme(theme: Int) {
-        if (AppCompatDelegate.getDefaultNightMode() == theme) return
-        requireActivity().recreate()
-    }
-
-    private fun populateAppThemeText(appTheme: Int = prefs.appTheme) {
-        when (appTheme) {
-            AppCompatDelegate.MODE_NIGHT_YES -> binding.appThemeText.text = getString(R.string.dark)
-            AppCompatDelegate.MODE_NIGHT_NO -> binding.appThemeText.text = getString(R.string.light)
-            else -> binding.appThemeText.text = getString(R.string.system_default)
-        }
     }
 
     private fun populateTextSize() {
@@ -517,12 +433,58 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             if (color != 0) color
             else requireContext().getColorFromAttr(R.attr.primaryColor)
         )
+        syncColorSlidersFromPref()
     }
 
     private fun updateHomeColor(color: Int) {
         binding.homeColorSelectLayout.visibility = View.GONE
         prefs.homeTextColor = color
         populateHomeColor()
+    }
+
+    private var suppressSliderListener = false
+
+    private fun syncColorSlidersFromPref() {
+        suppressSliderListener = true
+        val effectiveColor = prefs.homeTextColor.takeIf { it != 0 }
+            ?: requireContext().getColorFromAttr(R.attr.primaryColor)
+        val sliderColor = prefs.homeTextColor.takeIf { it != 0 } ?: 0xFF88C0D0.toInt()
+        val hsv = FloatArray(3)
+        android.graphics.Color.colorToHSV(sliderColor, hsv)
+        binding.homeColorHue.progress = hsv[0].toInt()
+        binding.homeColorSat.progress = (hsv[1] * 100).toInt()
+        binding.homeColorVal.progress = (hsv[2] * 100).toInt()
+        applyPreviewColor(effectiveColor)
+        suppressSliderListener = false
+    }
+
+    private fun applyPreviewColor(color: Int) {
+        binding.homeColorPreview.text = "06:45  abc"
+        binding.homeColorPreview.setTextColor(color)
+        binding.homeColorHex.text = String.format("#%06X", 0xFFFFFF and color)
+    }
+
+    private fun attachColorSliders() {
+        val listener = object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                if (suppressSliderListener || !fromUser) return
+                val hsv = floatArrayOf(
+                    binding.homeColorHue.progress.toFloat(),
+                    binding.homeColorSat.progress / 100f,
+                    binding.homeColorVal.progress / 100f,
+                )
+                val color = android.graphics.Color.HSVToColor(hsv)
+                prefs.homeTextColor = color
+                binding.homeColorCurrent.setTextColor(color)
+                applyPreviewColor(color)
+            }
+
+            override fun onStartTrackingTouch(sb: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(sb: android.widget.SeekBar?) {}
+        }
+        binding.homeColorHue.setOnSeekBarChangeListener(listener)
+        binding.homeColorSat.setOnSeekBarChangeListener(listener)
+        binding.homeColorVal.setOnSeekBarChangeListener(listener)
     }
 
     private fun populateCgm() {
@@ -587,8 +549,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun populateSwipeApps() {
-        binding.swipeLeftApp.text = prefs.appNameSwipeLeft
-        binding.swipeRightApp.text = prefs.appNameSwipeRight
+        binding.swipeLeftApp.text = prefs.appNameSwipeLeft.lowercase()
+        binding.swipeRightApp.text = prefs.appNameSwipeRight.lowercase()
         if (!prefs.swipeLeftEnabled)
             binding.swipeLeftApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColorTrans50))
         if (!prefs.swipeRightEnabled)
@@ -617,23 +579,9 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         )
     }
 
-    private fun populateActionHints() {
-    }
-
-    private fun populateProMessage() {
-        if (prefs.proMessageShown.not() && prefs.userState == Constants.UserState.SHARE) {
-            prefs.proMessageShown = true
-            viewModel.showDialog.postValue(Constants.Dialog.PRO_MESSAGE)
-        }
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
-    override fun onDestroy() {
-        viewModel.checkForMessages.call()
-        super.onDestroy()
-    }
 }

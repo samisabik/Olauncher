@@ -21,7 +21,6 @@ import app.olauncher.data.Constants
 import app.olauncher.databinding.AdapterAppDrawerBinding
 import app.olauncher.databinding.AdapterPrivateSpaceHeaderBinding
 import app.olauncher.helper.applyAppFont
-import app.olauncher.helper.applyAppTextSize
 import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.hideKeyboard
 import app.olauncher.helper.isSystemApp
@@ -87,7 +86,6 @@ class AppDrawerAdapter(
                     false
                 ).also {
                     it.root.applyAppFont(typeface)
-                    it.root.applyAppTextSize(parent.context)
                 }
             )
 
@@ -98,7 +96,6 @@ class AppDrawerAdapter(
                     false
                 ).also {
                     it.root.applyAppFont(typeface)
-                    it.root.applyAppTextSize(parent.context)
                 }
             )
         }
@@ -244,7 +241,7 @@ class AppDrawerAdapter(
 
             // Show indicators in title based on app type and state
             appTitle.text = buildString {
-                append(appModel.appLabel)
+                append(appModel.appLabel.lowercase())
                 if (appModel.isNew) append(" ✦")
             }
             appTitle.gravity = appLabelGravity

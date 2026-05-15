@@ -58,13 +58,19 @@
                         android:src="@drawable/ic_info" />
                 </FrameLayout>
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginTop="4dp"
+                    android:background="?attr/primaryColorTrans50" />
+
                 <TextView
                     android:id="@+id/setLauncher"
                     style="@style/TextSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="12dp"
                     android:layout_marginBottom="8dp"
                     android:text="@string/set_as_default_launcher" />
 
@@ -89,6 +95,12 @@
                     android:text="@string/home_screen"
                     android:textColor="?attr/primaryColor" />
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginTop="4dp"
+                    android:background="?attr/primaryColorTrans50" />
+
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -104,7 +116,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/apps_on_home_screen"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/homeAppsNum"
@@ -239,7 +251,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/show_date_time"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/dateTime"
@@ -321,7 +333,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/home_layout_alignment"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/alignment"
@@ -433,6 +445,12 @@
                     android:text="@string/appearance"
                     android:textColor="?attr/primaryColor" />
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginTop="4dp"
+                    android:background="?attr/primaryColorTrans50" />
+
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -447,7 +465,7 @@
                         android:layout_marginEnd="80dp"
                         android:paddingVertical="8dp"
                         android:text="@string/auto_show_keyboard"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/autoShowKeyboard"
@@ -473,7 +491,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/sort_by_usage"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/sortByUsage"
@@ -499,7 +517,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/notification_bar"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/statusBar"
@@ -512,85 +530,6 @@
                         android:text="@string/off" />
                 </FrameLayout>
 
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true">
-
-                    <TextView
-                        style="@style/TextSmall"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:paddingVertical="8dp"
-                        android:text="@string/theme_mode"
-                        android:textColor="?attr/primaryColor" />
-
-                    <TextView
-                        android:id="@+id/appThemeText"
-                        style="@style/TextSmallBold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="end|bottom"
-                        android:layout_marginEnd="4dp"
-                        android:padding="8dp"
-                        android:text="@string/dark" />
-
-                    <!-- theme color select layout-->
-                    <LinearLayout
-                        android:id="@+id/appThemeSelectLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
-                        android:background="@drawable/rounded_primary_gradient"
-                        android:elevation="8dp"
-                        android:orientation="horizontal"
-                        android:outlineAmbientShadowColor="@color/colorPrimaryDark"
-                        android:outlineSpotShadowColor="@color/colorPrimaryDark"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="2dp"
-                        android:visibility="gone"
-                        tools:ignore="UnusedAttribute">
-
-                        <Space
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1" />
-
-                        <TextView
-                            android:id="@+id/themeSystem"
-                            style="@style/TextSmallBold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="24dp"
-                            android:gravity="center"
-                            android:paddingVertical="6dp"
-                            android:text="@string/system_default"
-                            android:visibility="gone" />
-
-                        <TextView
-                            android:id="@+id/themeLight"
-                            style="@style/TextSmallBold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="24dp"
-                            android:gravity="center"
-                            android:paddingVertical="6dp"
-                            android:text="@string/light" />
-
-                        <TextView
-                            android:id="@+id/themeDark"
-                            style="@style/TextSmallBold"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:gravity="center"
-                            android:paddingVertical="6dp"
-                            android:text="@string/dark" />
-
-                    </LinearLayout>
-
-                </FrameLayout>
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -608,7 +547,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/text_size"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/textSizeValue"
@@ -688,7 +627,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/font"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/appFontText"
@@ -852,7 +791,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/home_color"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/homeColorCurrent"
@@ -864,118 +803,71 @@
                         android:padding="8dp"
                         android:text="@string/dot" />
 
-                    <HorizontalScrollView
+                    <LinearLayout
                         android:id="@+id/homeColorSelectLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
                         android:background="@drawable/rounded_primary_gradient"
                         android:elevation="8dp"
-                        android:fadingEdgeLength="8dp"
+                        android:orientation="vertical"
                         android:outlineAmbientShadowColor="@color/colorPrimaryDark"
                         android:outlineSpotShadowColor="@color/colorPrimaryDark"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="2dp"
-                        android:requiresFadingEdge="horizontal"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="8dp"
                         android:visibility="gone"
                         tools:ignore="UnusedAttribute">
 
-                        <LinearLayout
-                            android:layout_width="wrap_content"
+                        <TextView
+                            android:id="@+id/homeColorPreview"
+                            style="@style/TextLarge"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="end"
-                            android:orientation="horizontal">
+                            android:gravity="center"
+                            android:paddingVertical="8dp"
+                            tools:text="06:45  abc"
+                            tools:textColor="#88C0D0" />
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
 
                             <TextView
-                                android:id="@+id/homeColorDefault"
+                                android:id="@+id/homeColorAuto"
                                 style="@style/TextSmallBold"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
                                 android:paddingVertical="6dp"
                                 android:text="Auto" />
 
                             <TextView
-                                android:id="@+id/homeColorSnow"
+                                android:id="@+id/homeColorHex"
                                 style="@style/TextSmallBold"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
+                                android:layout_gravity="end"
                                 android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#ECEFF4" />
+                                tools:text="#88C0D0" />
+                        </FrameLayout>
 
-                            <TextView
-                                android:id="@+id/homeColorTeal"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
-                                android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#88C0D0" />
+                        <SeekBar
+                            android:id="@+id/homeColorHue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="360" />
 
-                            <TextView
-                                android:id="@+id/homeColorBlue"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
-                                android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#81A1C1" />
+                        <SeekBar
+                            android:id="@+id/homeColorSat"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="100" />
 
-                            <TextView
-                                android:id="@+id/homeColorPurple"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
-                                android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#B48EAD" />
-
-                            <TextView
-                                android:id="@+id/homeColorGreen"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
-                                android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#A3BE8C" />
-
-                            <TextView
-                                android:id="@+id/homeColorYellow"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
-                                android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#EBCB8B" />
-
-                            <TextView
-                                android:id="@+id/homeColorOrange"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginEnd="12dp"
-                                android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#D08770" />
-
-                            <TextView
-                                android:id="@+id/homeColorRed"
-                                style="@style/TextSmallBold"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:paddingVertical="6dp"
-                                android:text="@string/dot"
-                                android:textColor="#BF616A" />
-
-                        </LinearLayout>
-                    </HorizontalScrollView>
+                        <SeekBar
+                            android:id="@+id/homeColorVal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:max="100" />
+                    </LinearLayout>
 
                 </FrameLayout>
 
@@ -991,7 +883,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/cgm"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/cgmToggle"
@@ -1017,7 +909,7 @@
                         android:layout_marginStart="8dp"
                         android:paddingVertical="8dp"
                         android:text="@string/cgm_access"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/cgmNotifAccess"
@@ -1050,6 +942,12 @@
                     android:text="@string/gestures"
                     android:textColor="?attr/primaryColor" />
 
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="0.5dp"
+                    android:layout_marginTop="4dp"
+                    android:background="?attr/primaryColorTrans50" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -1066,7 +964,7 @@
                         android:lines="1"
                         android:paddingVertical="8dp"
                         android:text="@string/swipe_left_app"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/swipeLeftApp"
@@ -1095,7 +993,7 @@
                         android:lines="1"
                         android:paddingVertical="8dp"
                         android:text="@string/swipe_right_app"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/swipeRightApp"
@@ -1126,7 +1024,7 @@
                         android:lines="1"
                         android:paddingVertical="8dp"
                         android:text="@string/swipe_down_for"
-                        android:textColor="?attr/primaryColor" />
+                        android:textColor="?attr/primaryColorTrans80" />
 
                     <TextView
                         android:id="@+id/swipeDownAction"

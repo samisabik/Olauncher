@@ -30,16 +30,16 @@
         android:gravity="center_vertical"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingTop="56dp"
+        android:paddingTop="160dp"
         android:paddingBottom="48dp">
 
-        <!-- Clock + battery row (first item)-->
+        <!-- Clock + battery (first items, stacked)-->
         <LinearLayout
             android:id="@+id/clockRow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/home_app_padding_vertical"
             android:visibility="gone"
             tools:visibility="visible">
 
@@ -48,16 +48,18 @@
                 style="@style/TextLarge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:format12Hour="h:mm"
-                tools:text="06:45" />
+                android:format12Hour="h:mm:ss"
+                android:format24Hour="HH:mm:ss"
+                android:textSize="24sp"
+                tools:text="06:45:32" />
 
             <TextView
                 android:id="@+id/battery"
                 style="@style/TextLarge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="10dp"
-                tools:text="~ 56%" />
+                android:textSize="24sp"
+                tools:text="56%" />
         </LinearLayout>
 
         <!-- Glucose (below clock, if enabled)-->
@@ -66,7 +68,8 @@
             style="@style/TextLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingVertical="@dimen/home_app_padding_vertical"
+            android:paddingBottom="@dimen/home_app_padding_vertical"
+            android:textSize="24sp"
             android:visibility="gone"
             tools:text="5.4 mmol/L →"
             tools:visibility="visible" />

@@ -21,7 +21,6 @@ import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentAppDrawerBinding
 import app.olauncher.helper.applyAppFont
-import app.olauncher.helper.applyAppTextSize
 import app.olauncher.helper.deletePinnedShortcut
 import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.hideKeyboard
@@ -75,7 +74,6 @@ class AppDrawerFragment : Fragment() {
         initObservers()
         initClickListeners()
         view.applyAppFont(requireContext().getAppTypeface())
-        view.applyAppTextSize(requireContext())
     }
 
     private fun initViews() {
@@ -329,8 +327,6 @@ class AppDrawerFragment : Fragment() {
 
     private fun checkMessageAndExit() {
         findNavController().popBackStack()
-        if (flag == Constants.FLAG_LAUNCH_APP)
-            viewModel.checkForMessages.call()
     }
 
     override fun onStart() {

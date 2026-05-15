@@ -34,14 +34,13 @@ import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
 import app.olauncher.helper.BgFormat
 import app.olauncher.helper.BgUpdates
-import app.olauncher.helper.appUsagePermissionGranted
 import app.olauncher.helper.getColorFromAttr
 import app.olauncher.helper.applyAppFont
 import app.olauncher.helper.applyAppTextSize
 import app.olauncher.helper.dpToPx
+import android.text.SpannableString
 import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.expandNotificationDrawer
-import app.olauncher.helper.getChangedAppTheme
 import app.olauncher.helper.getUserHandleFromString
 import app.olauncher.helper.isPackageInstalled
 import app.olauncher.helper.openAlarmApp
@@ -49,7 +48,6 @@ import app.olauncher.helper.openCalendar
 import app.olauncher.helper.openCameraApp
 import app.olauncher.helper.openDialerApp
 import app.olauncher.helper.openSearch
-import app.olauncher.helper.setPlainWallpaperByTheme
 import app.olauncher.helper.showToast
 import app.olauncher.listener.OnSwipeTouchListener
 import app.olauncher.listener.ViewSwipeTouchListener
@@ -72,7 +70,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
             if (level >= 0 && scale > 0 && _binding != null) {
                 val pct = level * 100 / scale
-                binding.battery.text = "~ $pct%"
+                binding.battery.text = "$pct%"
             }
         }
     }
@@ -216,10 +214,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         }
         viewModel.isOlauncherDefault.observe(viewLifecycleOwner, Observer {
             if (it != true) {
-                if (prefs.dailyWallpaper && prefs.appTheme == AppCompatDelegate.MODE_NIGHT_YES) {
-                    prefs.dailyWallpaper = false
-                    viewModel.cancelWallpaperWorker()
-                }
                 prefs.homeBottomAlignment = false
                 setHomeAlignment()
             }
@@ -283,8 +277,21 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             return
         }
         val unit = prefs.cgmUnit.ifBlank { "mmol/L" }
-        val display = if (text.contains(unit, ignoreCase = true)) text
-        else text.replaceFirst(Regex("""\d+([.,]\d+)?"""), "$0 $unit")
+        val number = Regex("""\d+([.,]\d+)?""").find(text)?.value ?: text
+        val trend = prefs.cgmTrend
+        val display = if (trend.isBlank()) {
+            SpannableString(number)
+        } else {
+            val combined = "$number $trend"
+            SpannableString(combined).apply {
+                setSpan(
+                    android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                    combined.length - trend.length,
+                    combined.length,
+                    android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+        }
         binding.bgReading.text = display
         binding.bgReading.alpha = if (BgFormat.isStale(prefs.cgmBgTime)) 0.4f else 1f
         binding.bgReading.setTextColor(bgColorForText(text, unit))
@@ -410,7 +417,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
                 val shortcuts = launcherApps.getShortcuts(query, userHandle)
                 // Check if our shortcut still exists
                 if (shortcuts?.any { it.id == shortcutId } == true) {
-                    textView.text = appName
+                    textView.text = appName.lowercase()
                     return true
                 }
                 textView.text = ""
@@ -595,17 +602,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         }
     }
 
-    private fun changeAppTheme() {
-        if (prefs.dailyWallpaper.not()) return
-        val changedAppTheme = getChangedAppTheme(requireContext(), prefs.appTheme)
-        prefs.appTheme = changedAppTheme
-        if (prefs.dailyWallpaper) {
-            setPlainWallpaperByTheme(requireContext(), changedAppTheme)
-            viewModel.setWallpaperWorker()
-        }
-        requireActivity().recreate()
-    }
-
     private fun showLongPressToast() = requireContext().showToast(getString(R.string.long_press_to_select_app))
 
     private fun textOnClick(view: View) = onClick(view)
@@ -646,7 +642,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
             override fun onClick() {
                 super.onClick()
-                viewModel.checkForMessages.call()
             }
         }
     }
