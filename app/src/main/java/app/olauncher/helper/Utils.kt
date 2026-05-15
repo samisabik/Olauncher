@@ -66,6 +66,12 @@ fun Context.showToast(stringResource: Int, duration: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, getString(stringResource), duration).show()
 }
 
+fun appUseKey(app: AppModel): String = when (app) {
+    is AppModel.App -> "${app.appPackage}|${app.activityClassName ?: ""}"
+    is AppModel.PinnedShortcut -> "${app.appPackage}|${app.shortcutId}"
+    is AppModel.PrivateSpaceHeader -> ""
+}
+
 suspend fun getAppsList(
     context: Context,
     prefs: Prefs,
@@ -125,7 +131,14 @@ suspend fun getAppsList(
                 appList.addAll(pinned)
             }
 
-            appList.sortWith(compareBy(collator) { it.appLabel })
+            if (prefs.appsSortByUsage) {
+                appList.sortWith(
+                    compareByDescending<AppModel> { prefs.appUseCount(appUseKey(it)) }
+                        .thenBy(collator) { it.appLabel }
+                )
+            } else {
+                appList.sortWith(compareBy(collator) { it.appLabel })
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }

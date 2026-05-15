@@ -224,6 +224,16 @@ class Prefs(context: Context) {
         get() = prefs.getInt("HOME_TEXT_COLOR", 0)
         set(value) = prefs.edit { putInt("HOME_TEXT_COLOR", value).apply() }
 
+    var appsSortByUsage: Boolean
+        get() = prefs.getBoolean("APPS_SORT_BY_USAGE", false)
+        set(value) = prefs.edit { putBoolean("APPS_SORT_BY_USAGE", value).apply() }
+
+    fun appUseCount(key: String): Int = prefs.getInt("USE_COUNT_$key", 0)
+
+    fun bumpAppUseCount(key: String) {
+        prefs.edit { putInt("USE_COUNT_$key", appUseCount(key) + 1).apply() }
+    }
+
     var textSizeScale: Float
         get() = prefs.getFloat(TEXT_SIZE_SCALE, 1.0f)
         set(value) = prefs.edit { putFloat(TEXT_SIZE_SCALE, value).apply() }

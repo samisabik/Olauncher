@@ -68,6 +68,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (appModel is AppModel.PrivateSpaceHeader) return
         when (flag) {
             Constants.FLAG_LAUNCH_APP -> {
+                prefs.bumpAppUseCount(app.olauncher.helper.appUseKey(appModel))
                 when (appModel) {
                     is AppModel.PinnedShortcut -> launchShortcut(appModel)
                     is AppModel.App ->

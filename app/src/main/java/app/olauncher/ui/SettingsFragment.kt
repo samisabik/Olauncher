@@ -76,6 +76,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.homeAppsNum.text = prefs.homeAppsNum.toString()
         populateProMessage()
         populateKeyboardText()
+        binding.sortByUsage.text =
+            getString(if (prefs.appsSortByUsage) R.string.on else R.string.off)
         populateAppThemeText()
         populateTextSize()
         populateAppFont()
@@ -133,6 +135,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.appInfo -> openAppInfo(requireContext(), Process.myUserHandle(), BuildConfig.APPLICATION_ID)
             R.id.setLauncher -> viewModel.resetLauncherLiveData.call()
             R.id.autoShowKeyboard -> toggleKeyboardText()
+            R.id.sortByUsage -> toggleSortByUsage()
             R.id.homeAppsNum -> binding.appsNumSelectLayout.visibility = View.VISIBLE
             R.id.alignment -> binding.alignmentSelectLayout.visibility = View.VISIBLE
             R.id.alignmentLeft -> viewModel.updateHomeAlignment(Gravity.START)
@@ -222,6 +225,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.appInfo.setOnClickListener(this)
         binding.setLauncher.setOnClickListener(this)
         binding.autoShowKeyboard.setOnClickListener(this)
+        binding.sortByUsage.setOnClickListener(this)
         binding.homeAppsNum.setOnClickListener(this)
         binding.alignment.setOnClickListener(this)
         binding.alignmentLeft.setOnClickListener(this)
@@ -440,6 +444,12 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             prefs.autoShowKeyboard = !prefs.autoShowKeyboard
             populateKeyboardText()
         }
+    }
+
+    private fun toggleSortByUsage() {
+        prefs.appsSortByUsage = !prefs.appsSortByUsage
+        binding.sortByUsage.text =
+            getString(if (prefs.appsSortByUsage) R.string.on else R.string.off)
     }
 
     private fun updateTheme(appTheme: Int) {
