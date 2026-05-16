@@ -2,6 +2,9 @@ package app.olauncher.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -10,6 +13,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
@@ -23,6 +29,7 @@ import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentSettingsBinding
 import app.olauncher.helper.animateAlpha
+import app.olauncher.helper.dpToPx
 import app.olauncher.helper.applyAppFont
 import app.olauncher.helper.getAppTypeface
 import app.olauncher.helper.getColorFromAttr
@@ -64,6 +71,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         populateAppFont()
         populateCgm()
         populateHomeColor()
+        buildSwatches()
         populateAlignment()
         populateStatusBar()
         populateDateTime()
@@ -82,8 +90,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.swipeDownSelectLayout.visibility = View.GONE
         if (view.id != R.id.homeColorCurrent
             && view.id != R.id.homeColorAuto
-            && view.id != R.id.homeColorHue && view.id != R.id.homeColorSat
-            && view.id != R.id.homeColorVal && view.id != R.id.homeColorHex
         ) {
             binding.homeColorSelectLayout.visibility = View.GONE
         }
@@ -238,7 +244,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.arrowClear.setOnClickListener(this)
         binding.homeColorCurrent.setOnClickListener(this)
         binding.homeColorAuto.setOnClickListener(this)
-        attachColorSliders()
+        attachHueSlider()
 
         binding.maxApps0.setOnClickListener(this)
         binding.maxApps1.setOnClickListener(this)
@@ -426,13 +432,45 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         )
     }
 
+    // Curated Nord-style palette for one-tap picks.
+    private val homeColorSwatches = intArrayOf(
+        0xFFECEFF4.toInt(), // snow
+        0xFF88C0D0.toInt(), // frost blue
+        0xFF8FBCBB.toInt(), // teal
+        0xFFA3BE8C.toInt(), // green
+        0xFFEBCB8B.toInt(), // yellow
+        0xFFD08770.toInt(), // orange
+        0xFFBF616A.toInt(), // red
+        0xFFB48EAD.toInt(), // purple
+    )
+
+    // Greyscale row — the hue slider can't reach neutral tones.
+    private val homeColorGreys = intArrayOf(
+        0xFFFFFFFF.toInt(),
+        0xFFD8D8D8.toInt(),
+        0xFFB0B0B0.toInt(),
+        0xFF888888.toInt(),
+        0xFF606060.toInt(),
+        0xFF3C3C3C.toInt(),
+        0xFF1C1C1C.toInt(),
+        0xFF000000.toInt(),
+    )
+
+    private val swatchDots = mutableListOf<Pair<View, Int>>()
+    private var suppressSliderListener = false
+
+    // Saturation/value of the last picked colour — the hue slider nudges hue while keeping these.
+    private var hueSat = 1f
+    private var hueVal = 1f
+
     private fun populateHomeColor() {
         val color = prefs.homeTextColor
-        binding.homeColorCurrent.setTextColor(
-            if (color != 0) color
-            else requireContext().getColorFromAttr(R.attr.primaryColor)
-        )
-        syncColorSlidersFromPref()
+        val effective = color.takeIf { it != 0 }
+            ?: requireContext().getColorFromAttr(R.attr.primaryColor)
+        binding.homeColorCurrent.setTextColor(effective)
+        applyPreviewColor(effective)
+        syncHueFromColor(color.takeIf { it != 0 } ?: 0xFF88C0D0.toInt())
+        refreshSwatchSelection()
     }
 
     private fun updateHomeColor(color: Int) {
@@ -441,49 +479,109 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         populateHomeColor()
     }
 
-    private var suppressSliderListener = false
-
-    private fun syncColorSlidersFromPref() {
-        suppressSliderListener = true
-        val effectiveColor = prefs.homeTextColor.takeIf { it != 0 }
-            ?: requireContext().getColorFromAttr(R.attr.primaryColor)
-        val sliderColor = prefs.homeTextColor.takeIf { it != 0 } ?: 0xFF88C0D0.toInt()
-        val hsv = FloatArray(3)
-        android.graphics.Color.colorToHSV(sliderColor, hsv)
-        binding.homeColorHue.progress = hsv[0].toInt()
-        binding.homeColorSat.progress = (hsv[1] * 100).toInt()
-        binding.homeColorVal.progress = (hsv[2] * 100).toInt()
-        applyPreviewColor(effectiveColor)
-        suppressSliderListener = false
-    }
-
     private fun applyPreviewColor(color: Int) {
         binding.homeColorPreview.text = "06:45  abc"
         binding.homeColorPreview.setTextColor(color)
         binding.homeColorHex.text = String.format("#%06X", 0xFFFFFF and color)
     }
 
-    private fun attachColorSliders() {
-        val listener = object : android.widget.SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(sb: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+    private fun onColorPicked(color: Int) {
+        prefs.homeTextColor = color
+        binding.homeColorCurrent.setTextColor(color)
+        applyPreviewColor(color)
+        refreshSwatchSelection()
+    }
+
+    private fun buildSwatches() {
+        swatchDots.clear()
+        fillSwatchRow(binding.homeColorSwatches, homeColorSwatches)
+        fillSwatchRow(binding.homeColorGreys, homeColorGreys)
+        refreshSwatchSelection()
+    }
+
+    private fun fillSwatchRow(container: LinearLayout, colors: IntArray) {
+        container.removeAllViews()
+        val dotSize = 26.dpToPx()
+        val cellHeight = 40.dpToPx()
+        colors.forEach { color ->
+            val cell = FrameLayout(requireContext())
+            val dot = View(requireContext())
+            dot.layoutParams = FrameLayout.LayoutParams(dotSize, dotSize, Gravity.CENTER)
+            cell.addView(dot)
+            cell.setOnClickListener {
+                onColorPicked(color)
+                syncHueFromColor(color)
+            }
+            container.addView(cell, LinearLayout.LayoutParams(0, cellHeight, 1f))
+            swatchDots.add(dot to color)
+        }
+    }
+
+    private fun refreshSwatchSelection() {
+        if (swatchDots.isEmpty()) return
+        val current = prefs.homeTextColor
+        swatchDots.forEach { (dot, color) ->
+            dot.background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(color)
+                if (color == current) {
+                    // Contrast the ring against the dot so it shows on both white and black.
+                    val luminance = 0.299 * Color.red(color) +
+                            0.587 * Color.green(color) + 0.114 * Color.blue(color)
+                    val ring = if (luminance > 140) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+                    setStroke(3.dpToPx(), ring)
+                }
+            }
+        }
+    }
+
+    private fun syncHueFromColor(color: Int) {
+        val hsv = FloatArray(3)
+        Color.colorToHSV(color, hsv)
+        hueSat = hsv[1]
+        hueVal = hsv[2]
+        suppressSliderListener = true
+        binding.homeColorHue.progress = hsv[0].toInt()
+        suppressSliderListener = false
+    }
+
+    private fun attachHueSlider() {
+        applyHueTrack()
+        binding.homeColorHue.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (suppressSliderListener || !fromUser) return
-                val hsv = floatArrayOf(
-                    binding.homeColorHue.progress.toFloat(),
-                    binding.homeColorSat.progress / 100f,
-                    binding.homeColorVal.progress / 100f,
-                )
-                val color = android.graphics.Color.HSVToColor(hsv)
+                // White / greys carry almost no hue — give the slider something to act on.
+                val sat = if (hueSat < 0.15f) 0.55f else hueSat
+                val value = if (hueVal < 0.3f) 0.9f else hueVal
+                val color = Color.HSVToColor(floatArrayOf(progress.toFloat(), sat, value))
                 prefs.homeTextColor = color
                 binding.homeColorCurrent.setTextColor(color)
                 applyPreviewColor(color)
+                refreshSwatchSelection()
             }
 
-            override fun onStartTrackingTouch(sb: android.widget.SeekBar?) {}
-            override fun onStopTrackingTouch(sb: android.widget.SeekBar?) {}
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
+    }
+
+    private fun applyHueTrack() {
+        val hueColors = intArrayOf(
+            0xFFFF0000.toInt(), 0xFFFFFF00.toInt(), 0xFF00FF00.toInt(),
+            0xFF00FFFF.toInt(), 0xFF0000FF.toInt(), 0xFFFF00FF.toInt(), 0xFFFF0000.toInt(),
+        )
+        val track = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, hueColors)
+        track.cornerRadius = 100f
+        val vInset = 5.dpToPx()
+        binding.homeColorHue.progressDrawable = InsetDrawable(track, 0, vInset, 0, vInset)
+
+        val thumbSize = 20.dpToPx()
+        binding.homeColorHue.thumb = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(0xFFFFFFFF.toInt())
+            setStroke(2.dpToPx(), 0x66000000)
+            setSize(thumbSize, thumbSize)
         }
-        binding.homeColorHue.setOnSeekBarChangeListener(listener)
-        binding.homeColorSat.setOnSeekBarChangeListener(listener)
-        binding.homeColorVal.setOnSeekBarChangeListener(listener)
     }
 
     private fun populateCgm() {

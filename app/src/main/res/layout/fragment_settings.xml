@@ -780,9 +780,31 @@
                             tools:text="06:45  abc"
                             tools:textColor="#88C0D0" />
 
+                        <LinearLayout
+                            android:id="@+id/homeColorSwatches"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:orientation="horizontal" />
+
+                        <LinearLayout
+                            android:id="@+id/homeColorGreys"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal" />
+
+                        <SeekBar
+                            android:id="@+id/homeColorHue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:max="360"
+                            android:splitTrack="false" />
+
                         <FrameLayout
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp">
 
                             <TextView
                                 android:id="@+id/homeColorAuto"
@@ -801,24 +823,6 @@
                                 android:paddingVertical="6dp"
                                 tools:text="#88C0D0" />
                         </FrameLayout>
-
-                        <SeekBar
-                            android:id="@+id/homeColorHue"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:max="360" />
-
-                        <SeekBar
-                            android:id="@+id/homeColorSat"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:max="100" />
-
-                        <SeekBar
-                            android:id="@+id/homeColorVal"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:max="100" />
                     </LinearLayout>
 
                 </FrameLayout>
