@@ -215,6 +215,16 @@ class Prefs(context: Context) {
         get() = prefs.getBoolean("APPS_SORT_BY_USAGE", false)
         set(value) = prefs.edit { putBoolean("APPS_SORT_BY_USAGE", value).apply() }
 
+    var notes: String
+        get() = prefs.getString("NOTES", "").orEmpty()
+        set(value) = prefs.edit { putString("NOTES", value).apply() }
+
+    // Captured on the home screen so the notes editor can start its text at
+    // the clock's actual Y (the home layout centres its content vertically).
+    var notesTopPadding: Int
+        get() = prefs.getInt("NOTES_TOP_PADDING", 0)
+        set(value) = prefs.edit { putInt("NOTES_TOP_PADDING", value).apply() }
+
     fun appUseCount(key: String): Int = prefs.getInt("USE_COUNT_$key", 0)
 
     fun bumpAppUseCount(key: String) {

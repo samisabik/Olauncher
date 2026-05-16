@@ -274,6 +274,20 @@ class AppDrawerFragment : Fragment() {
         val apps = currentAppList ?: return
         val combined = apps.toMutableList()
 
+        if (flag == Constants.FLAG_SET_SWIPE_LEFT_APP || flag == Constants.FLAG_SET_SWIPE_RIGHT_APP) {
+            combined.add(
+                0,
+                AppModel.App(
+                    appLabel = getString(R.string.notes),
+                    key = null,
+                    appPackage = Constants.NOTES_PACKAGE,
+                    activityClassName = null,
+                    isNew = false,
+                    user = android.os.Process.myUserHandle(),
+                )
+            )
+        }
+
         if (flag == Constants.FLAG_LAUNCH_APP && currentPrivateSpaceAvailable) {
             combined.add(AppModel.PrivateSpaceHeader(isLocked = currentPrivateSpaceLocked))
             if (!currentPrivateSpaceLocked) {

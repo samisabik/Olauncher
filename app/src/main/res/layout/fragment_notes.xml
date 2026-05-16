@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/primaryShadeDarkColor">
+
+    <EditText
+        android:id="@+id/notes"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@null"
+        android:fadingEdgeLength="24dp"
+        android:gravity="top|start"
+        android:hint="@string/notes"
+        android:importantForAutofill="no"
+        android:inputType="textMultiLine|textCapSentences|textNoSuggestions"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="170dp"
+        android:paddingBottom="32dp"
+        android:requiresFadingEdge="vertical"
+        android:scrollbars="none"
+        android:textColorHint="?attr/primaryColorTrans50"
+        android:textSize="@dimen/text_small" />
+
+</FrameLayout>

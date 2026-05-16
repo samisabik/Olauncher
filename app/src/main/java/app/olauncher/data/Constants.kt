@@ -76,6 +76,9 @@ object Constants {
 
     const val REQUEST_CODE_LAUNCHER_SELECTOR = 678
 
+    // Sentinel "package" for the virtual Notes action shown in the swipe-app picker.
+    const val NOTES_PACKAGE = "app.olauncher.action.notes"
+
     const val LONG_PRESS_DELAY_MS = 500L
     const val ONE_DAY_IN_MILLIS = 86400000L
     const val ONE_HOUR_IN_MILLIS = 3600000L

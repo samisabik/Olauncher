@@ -112,6 +112,21 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         viewModel.isOlauncherDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
+        captureNotesAnchor()
+    }
+
+    private fun captureNotesAnchor() {
+        val anchor = when {
+            binding.clockRow.isVisible -> binding.clock
+            binding.bgReading.isVisible -> binding.bgReading
+            else -> binding.homeApp1
+        }
+        anchor.post {
+            if (_binding == null) return@post
+            val loc = IntArray(2)
+            anchor.getLocationInWindow(loc)
+            if (loc[1] > 0) prefs.notesTopPadding = loc[1]
+        }
     }
 
     override fun onClick(view: View) {
@@ -520,8 +535,20 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         )
     }
 
+    private fun openNotes() {
+        try {
+            findNavController().navigate(R.id.action_mainFragment_to_notesFragment)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     private fun openSwipeRightApp() {
         if (!prefs.swipeRightEnabled) return
+        if (prefs.appPackageSwipeRight == Constants.NOTES_PACKAGE) {
+            openNotes()
+            return
+        }
         launchAppOrShortcut(
             appName = prefs.appNameSwipeRight,
             packageName = prefs.appPackageSwipeRight,
@@ -535,6 +562,10 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     private fun openSwipeLeftApp() {
         if (!prefs.swipeLeftEnabled) return
+        if (prefs.appPackageSwipeLeft == Constants.NOTES_PACKAGE) {
+            openNotes()
+            return
+        }
         launchAppOrShortcut(
             appName = prefs.appNameSwipeLeft,
             packageName = prefs.appPackageSwipeLeft,
