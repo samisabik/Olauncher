@@ -79,6 +79,8 @@
     <string name="font_monoton">Monoton</string>
     <string name="cgm">Glucose</string>
     <string name="cgm_access">Notification access</string>
+    <string name="cgm_trend">Trend</string>
+    <string name="cgm_trend_no_icon">No trend icon seen yet</string>
     <string name="grant">Grant</string>
     <string name="home_color">Home colour</string>
     <string name="dot">●</string>

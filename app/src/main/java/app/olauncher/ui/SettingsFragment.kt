@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Process
 import android.provider.Settings
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -18,7 +17,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import app.olauncher.BuildConfig
 import app.olauncher.MainViewModel
 import app.olauncher.R
 import app.olauncher.data.Constants
@@ -33,7 +31,6 @@ import app.olauncher.helper.isDarkThemeOn
 import app.olauncher.helper.isEinkDisplay
 import app.olauncher.helper.isOlauncherDefault
 import app.olauncher.helper.isTablet
-import app.olauncher.helper.openAppInfo
 import app.olauncher.helper.openUrl
 import app.olauncher.helper.showToast
 
@@ -108,11 +105,16 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         }
         if (view.id != R.id.alignmentBottom)
             binding.alignmentSelectLayout.visibility = View.GONE
+        if (view.id != R.id.cgmTrendCurrent
+            && view.id != R.id.arrowDd && view.id != R.id.arrowD
+            && view.id != R.id.arrowDr && view.id != R.id.arrowR
+            && view.id != R.id.arrowUr && view.id != R.id.arrowU
+            && view.id != R.id.arrowUu && view.id != R.id.arrowClear
+        ) {
+            binding.cgmTrendPicker.visibility = View.GONE
+        }
 
         when (view.id) {
-            R.id.olauncherHiddenApps -> showHiddenApps()
-            R.id.appInfo -> openAppInfo(requireContext(), Process.myUserHandle(), BuildConfig.APPLICATION_ID)
-            R.id.setLauncher -> viewModel.resetLauncherLiveData.call()
             R.id.autoShowKeyboard -> toggleKeyboardText()
             R.id.sortByUsage -> toggleSortByUsage()
             R.id.homeAppsNum -> binding.appsNumSelectLayout.visibility = View.VISIBLE
@@ -141,6 +143,15 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.fontMonoton -> updateAppFont(Constants.Font.MONOTON)
             R.id.cgmToggle -> toggleCgm()
             R.id.cgmNotifAccess -> openNotificationAccessSettings()
+            R.id.cgmTrendCurrent -> toggleTrendPicker()
+            R.id.arrowDd -> assignTrend("↓↓")
+            R.id.arrowD -> assignTrend("↓")
+            R.id.arrowDr -> assignTrend("↘")
+            R.id.arrowR -> assignTrend("→")
+            R.id.arrowUr -> assignTrend("↗")
+            R.id.arrowU -> assignTrend("↑")
+            R.id.arrowUu -> assignTrend("↑↑")
+            R.id.arrowClear -> assignTrend("")
             R.id.homeColorCurrent -> binding.homeColorSelectLayout.visibility = View.VISIBLE
             R.id.homeColorAuto -> updateHomeColor(0)
 
@@ -182,10 +193,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun initClickListeners() {
-        binding.olauncherHiddenApps.setOnClickListener(this)
         binding.scrollLayout.setOnClickListener(this)
-        binding.appInfo.setOnClickListener(this)
-        binding.setLauncher.setOnClickListener(this)
         binding.autoShowKeyboard.setOnClickListener(this)
         binding.sortByUsage.setOnClickListener(this)
         binding.homeAppsNum.setOnClickListener(this)
@@ -219,6 +227,15 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.fontMonoton.setOnClickListener(this)
         binding.cgmToggle.setOnClickListener(this)
         binding.cgmNotifAccess.setOnClickListener(this)
+        binding.cgmTrendCurrent.setOnClickListener(this)
+        binding.arrowDd.setOnClickListener(this)
+        binding.arrowD.setOnClickListener(this)
+        binding.arrowDr.setOnClickListener(this)
+        binding.arrowR.setOnClickListener(this)
+        binding.arrowUr.setOnClickListener(this)
+        binding.arrowU.setOnClickListener(this)
+        binding.arrowUu.setOnClickListener(this)
+        binding.arrowClear.setOnClickListener(this)
         binding.homeColorCurrent.setOnClickListener(this)
         binding.homeColorAuto.setOnClickListener(this)
         attachColorSliders()
@@ -242,12 +259,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun initObservers() {
-        viewModel.isOlauncherDefault.observe(viewLifecycleOwner) {
-            if (it) {
-                binding.setLauncher.text = getString(R.string.change_default_launcher)
-                prefs.toShowHintCounter += 1
-            }
-        }
         viewModel.homeAppAlignment.observe(viewLifecycleOwner) {
             populateAlignment()
         }
@@ -328,18 +339,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
                 systemUiVisibility = View.SYSTEM_UI_FLAG_IMMERSIVE or View.SYSTEM_UI_FLAG_FULLSCREEN
             }
         }
-    }
-
-    private fun showHiddenApps() {
-        if (prefs.hiddenApps.isEmpty()) {
-            requireContext().showToast(getString(R.string.no_hidden_apps))
-            return
-        }
-        viewModel.getHiddenApps()
-        findNavController().navigate(
-            R.id.action_settingsFragment_to_appListFragment,
-            bundleOf(Constants.Key.FLAG to Constants.FLAG_HIDDEN_APPS)
-        )
     }
 
     private fun updateHomeAppsNum(num: Int) {
@@ -489,11 +488,41 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun populateCgm() {
         binding.cgmToggle.text = getString(if (prefs.cgmEnabled) R.string.on else R.string.off)
+        populateTrend()
     }
 
     private fun toggleCgm() {
         prefs.cgmEnabled = !prefs.cgmEnabled
         populateCgm()
+    }
+
+    private fun populateTrend() {
+        val id = prefs.cgmTrendIconId
+        val glyph = if (id != 0) prefs.cgmTrendMap()[id].orEmpty() else ""
+        binding.cgmTrendCurrent.text = when {
+            id == 0 -> "—"
+            glyph.isBlank() -> "?"
+            else -> glyph
+        }
+    }
+
+    private fun toggleTrendPicker() {
+        if (prefs.cgmTrendIconId == 0) {
+            requireContext().showToast(getString(R.string.cgm_trend_no_icon))
+            return
+        }
+        binding.cgmTrendPicker.visibility =
+            if (binding.cgmTrendPicker.isVisible) View.GONE else View.VISIBLE
+    }
+
+    private fun assignTrend(glyph: String) {
+        val id = prefs.cgmTrendIconId
+        if (id == 0) return
+        prefs.cgmTrendMapPut(id, glyph)
+        prefs.cgmTrend = glyph
+        binding.cgmTrendPicker.visibility = View.GONE
+        populateTrend()
+        app.olauncher.helper.BgUpdates.fire()
     }
 
     private fun openNotificationAccessSettings() {
@@ -577,6 +606,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.action_settingsFragment_to_appListFragment,
             bundleOf(Constants.Key.FLAG to flag)
         )
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (_binding != null) populateTrend()
     }
 
     override fun onDestroyView() {

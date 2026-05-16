@@ -182,6 +182,31 @@ class Prefs(context: Context) {
         get() = prefs.getString("CGM_TREND", "").orEmpty()
         set(value) = prefs.edit { putString("CGM_TREND", value).apply() }
 
+    var cgmTrendIconId: Int
+        get() = prefs.getInt("CGM_TREND_ICON_ID", 0)
+        set(value) = prefs.edit { putInt("CGM_TREND_ICON_ID", value).apply() }
+
+    // resId → arrow glyph. CamAPS obfuscates resource names (R8), so we can't
+    // tell which drawable means which direction without being taught — the user
+    // calibrates each id once via Settings.
+    fun cgmTrendMap(): Map<Int, String> {
+        val s = prefs.getString("CGM_TREND_MAP", "").orEmpty()
+        if (s.isBlank()) return emptyMap()
+        return s.split(",").mapNotNull { entry ->
+            val parts = entry.split(":")
+            if (parts.size != 2) return@mapNotNull null
+            val id = parts[0].toIntOrNull() ?: return@mapNotNull null
+            id to parts[1]
+        }.toMap()
+    }
+
+    fun cgmTrendMapPut(id: Int, glyph: String) {
+        val map = cgmTrendMap().toMutableMap()
+        if (glyph.isBlank()) map.remove(id) else map[id] = glyph
+        val s = map.entries.joinToString(",") { "${it.key}:${it.value}" }
+        prefs.edit { putString("CGM_TREND_MAP", s).apply() }
+    }
+
     var homeTextColor: Int
         get() = prefs.getInt("HOME_TEXT_COLOR", 0)
         set(value) = prefs.edit { putInt("HOME_TEXT_COLOR", value).apply() }

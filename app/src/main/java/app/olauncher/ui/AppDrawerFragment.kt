@@ -2,6 +2,8 @@ package app.olauncher.ui
 
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
+import android.widget.EditText
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -83,7 +85,15 @@ class AppDrawerFragment : Fragment() {
             binding.search.queryHint = "Please select an app"
         try {
             val searchTextView = binding.search.findViewById<TextView>(R.id.search_src_text)
-            if (searchTextView != null) searchTextView.gravity = prefs.appLabelAlignment
+            if (searchTextView != null) {
+                searchTextView.gravity = prefs.appLabelAlignment
+                if (searchTextView is EditText) {
+                    val capMask = (InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                            or InputType.TYPE_TEXT_FLAG_CAP_WORDS
+                            or InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS).inv()
+                    searchTextView.inputType = searchTextView.inputType and capMask
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
